@@ -1,0 +1,23 @@
+{
+  "name": "ec-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@10.30.0",
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:web": "pnpm --filter web dev",
+    "build": "turbo run build",
+    "build:web": "pnpm --filter web build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "clean": "turbo run clean",
+    "docker:up": "docker compose -f infrastructure/docker/docker-compose.yml up -d",
+    "docker:down": "docker compose -f infrastructure/docker/docker-compose.yml down",
+    "docker:logs": "docker compose -f infrastructure/docker/docker-compose.yml logs -f",
+    "docker:ps": "docker compose -f infrastructure/docker/docker-compose.yml ps",
+    "services:test": "python test_live_gateway.py"
+  },
+  "devDependencies": {
+    "turbo": "^2.11.13"
+  }
+}

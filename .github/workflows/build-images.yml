@@ -1,0 +1,40 @@
+name: Build Docker Images
+
+on:
+  push:
+    branches: [ development, main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-docker-images:
+    name: Build Service Container Images
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service:
+          - name: user-service
+            path: backend/services/user-service
+          - name: product-service
+            path: backend/services/product-service
+          - name: order-service
+            path: backend/services/order-service
+          - name: payment-service
+            path: backend/services/payment-service
+          - name: notification-service
+            path: backend/services/notification-service
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image for ${{ matrix.service.name }}
+        uses: docker/build-push-action@v5
+        with:
+          context: ${{ matrix.service.path }}
+          push: false
+          tags: ${{ matrix.service.name }}:latest

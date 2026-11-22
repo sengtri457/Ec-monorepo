@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: services-config
+  namespace: ecommerce-microservices
+data:
+  DJANGO_DEBUG: "False"
+  DJANGO_ALLOWED_HOSTS: "*"
+  DB_ENGINE: "django.db.backends.postgresql"
+  DB_HOST: "postgres"
+  DB_PORT: "5432"
+  PRODUCT_SERVICE_URL: "http://product-service:8000"
+  PAYMENT_SERVICE_URL: "http://payment-service:8000"
+  NOTIFICATION_SERVICE_URL: "http://notification-service:8000"
+  ORDER_SERVICE_URL: "http://order-service:8000"
+  USER_SERVICE_URL: "http://user-service:8000"
+  BAKONG_ACCOUNT_ID: "clothes@abaa"
+  BAKONG_MERCHANT_NAME: "Clothes Apparel Co"
+  BAKONG_MERCHANT_CITY: "Phnom Penh"

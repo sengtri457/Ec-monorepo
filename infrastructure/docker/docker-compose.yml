@@ -1,0 +1,234 @@
+version: '3.8'
+
+services:
+  # ----------------------------------------------------
+  # Shared PostgreSQL Container (Hosting 5 separate databases)
+  # ----------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: ec-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pgsql}
+    ports:
+      - "${POSTGRES_PORT:-5433}:5432" # Mapped to 5433 on host to avoid conflict with host Postgres service
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ecommerce-network
+
+  # ----------------------------------------------------
+  # User Service (:8001)
+  # ----------------------------------------------------
+  user-service:
+    build:
+      context: ../../backend/services/user-service
+      dockerfile: Dockerfile
+    container_name: ec-user-service
+    restart: unless-stopped
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+    environment:
+      - DJANGO_DEBUG=${DJANGO_DEBUG:-True}
+      - DJANGO_SECRET_KEY=${USER_SERVICE_SECRET_KEY:-user-service-docker-secret-key-12345}
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-*}
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_NAME=user_db
+      - DB_USER=user_user
+      - DB_PASSWORD=user_password
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-shared-jwt-secret-key-change-in-production}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+    volumes:
+      - ../../backend/services/user-service:/app
+    ports:
+      - "8001:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ecommerce-network
+
+  # ----------------------------------------------------
+  # Product Service (:8002)
+  # ----------------------------------------------------
+  product-service:
+    build:
+      context: ../../backend/services/product-service
+      dockerfile: Dockerfile
+    container_name: ec-product-service
+    restart: unless-stopped
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+    environment:
+      - DJANGO_DEBUG=${DJANGO_DEBUG:-True}
+      - DJANGO_SECRET_KEY=${PRODUCT_SERVICE_SECRET_KEY:-product-service-docker-secret-key-12345}
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-*}
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_NAME=product_db
+      - DB_USER=product_user
+      - DB_PASSWORD=product_password
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - INTERNAL_SERVICE_KEY=${INTERNAL_SERVICE_KEY:-ec-internal-shared-secret-key-2026}
+    ports:
+      - "8002:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ecommerce-network
+
+  # ----------------------------------------------------
+  # Order Service (:8003)
+  # ----------------------------------------------------
+  order-service:
+    build:
+      context: ../../backend/services/order-service
+      dockerfile: Dockerfile
+    container_name: ec-order-service
+    restart: unless-stopped
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+    environment:
+      - DJANGO_DEBUG=${DJANGO_DEBUG:-True}
+      - DJANGO_SECRET_KEY=${ORDER_SERVICE_SECRET_KEY:-order-service-docker-secret-key-12345}
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-*}
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_NAME=order_db
+      - DB_USER=order_user
+      - DB_PASSWORD=order_password
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - PRODUCT_SERVICE_URL=http://product-service:8000
+      - PAYMENT_SERVICE_URL=http://payment-service:8000
+      - NOTIFICATION_SERVICE_URL=http://notification-service:8000
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-shared-jwt-secret-key-change-in-production}
+      - INTERNAL_SERVICE_KEY=${INTERNAL_SERVICE_KEY:-ec-internal-shared-secret-key-2026}
+      - DEFAULT_TAX_RATE=${DEFAULT_TAX_RATE:-0.10}
+    ports:
+      - "8003:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      product-service:
+        condition: service_started
+    networks:
+      - ecommerce-network
+
+  # ----------------------------------------------------
+  # Payment Service (:8004)
+  # ----------------------------------------------------
+  payment-service:
+    build:
+      context: ../../backend/services/payment-service
+      dockerfile: Dockerfile
+    container_name: ec-payment-service
+    restart: unless-stopped
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+    environment:
+      - DJANGO_DEBUG=${DJANGO_DEBUG:-True}
+      - DJANGO_SECRET_KEY=${PAYMENT_SERVICE_SECRET_KEY:-payment-service-docker-secret-key-12345}
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-*}
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_NAME=payment_db
+      - DB_USER=payment_user
+      - DB_PASSWORD=payment_password
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - ORDER_SERVICE_URL=http://order-service:8000
+      - BAKONG_ACCOUNT_ID=${BAKONG_ACCOUNT_ID:-clothes@abaa}
+      - BAKONG_MERCHANT_NAME=${BAKONG_MERCHANT_NAME:-Clothes Apparel Co}
+      - BAKONG_MERCHANT_CITY=${BAKONG_MERCHANT_CITY:-Phnom Penh}
+      - BAKONG_PHONE_NUMBER=${BAKONG_PHONE_NUMBER:-}
+      - BAKONG_API_URL=${BAKONG_API_URL:-https://api-bakong.nbc.gov.kh/v1/}
+      - BAKONG_API_TOKEN=${BAKONG_API_TOKEN:-}
+      - INTERNAL_SERVICE_KEY=${INTERNAL_SERVICE_KEY:-ec-internal-shared-secret-key-2026}
+    ports:
+      - "8004:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      order-service:
+        condition: service_started
+    networks:
+      - ecommerce-network
+
+  # ----------------------------------------------------
+  # Notification Service (:8005)
+  # ----------------------------------------------------
+  notification-service:
+    build:
+      context: ../../backend/services/notification-service
+      dockerfile: Dockerfile
+    container_name: ec-notification-service
+    restart: unless-stopped
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+    environment:
+      - DJANGO_DEBUG=${DJANGO_DEBUG:-True}
+      - DJANGO_SECRET_KEY=${NOTIFICATION_SERVICE_SECRET_KEY:-notification-service-docker-secret-key-12345}
+      - DJANGO_ALLOWED_HOSTS=${DJANGO_ALLOWED_HOSTS:-*}
+      - DB_ENGINE=django.db.backends.postgresql
+      - DB_NAME=notification_db
+      - DB_USER=notification_user
+      - DB_PASSWORD=notification_password
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - INTERNAL_SERVICE_KEY=${INTERNAL_SERVICE_KEY:-ec-internal-shared-secret-key-2026}
+    ports:
+      - "8005:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ecommerce-network
+
+  # ----------------------------------------------------
+  # API Gateway (Nginx Reverse Proxy :80)
+  # ----------------------------------------------------
+  gateway:
+    image: nginx:alpine
+    container_name: ec-gateway
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ../../backend/api-gateway/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - user-service
+      - product-service
+      - order-service
+      - payment-service
+      - notification-service
+    networks:
+      - ecommerce-network
+
+networks:
+  ecommerce-network:
+    driver: bridge
+
+volumes:
+  pgdata:
+    driver: local

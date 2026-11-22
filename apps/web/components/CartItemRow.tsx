@@ -1,0 +1,148 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { CartItem } from "@/types";
+import { useCart, getCartItemKey } from "@/context/CartContext";
+
+interface CartItemRowProps {
+  item: CartItem;
+}
+
+export default function CartItemRow({ item }: CartItemRowProps) {
+  const { updateQty, removeItem, toggleSelectItem } = useCart();
+  const maxStock = item.maxStock ?? 99;
+  const itemKey = item.id || getCartItemKey(item);
+
+  const isSelected = item.selected !== false;
+  const lineTotal = Number((item.price * item.quantity).toFixed(2));
+
+  return (
+    <div
+      className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 border bg-paper shadow-xs transition-all ${
+        isSelected
+          ? "border-border hover:border-border-strong"
+          : "border-border/60 bg-paper/60 opacity-75"
+      }`}
+    >
+      {/* Product Image & Info with Checkbox */}
+      <div className="flex items-center gap-4">
+        {/* Selection Checkbox */}
+        <label
+          className="flex items-center justify-center cursor-pointer p-1 -m-1"
+          title={isSelected ? "Unselect to checkout later" : "Select to checkout"}
+        >
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => toggleSelectItem(itemKey)}
+            aria-label={`Select ${item.title} for checkout`}
+            className="h-4 w-4 rounded-none accent-ink cursor-pointer transition-transform active:scale-90"
+          />
+        </label>
+
+        <div className="relative h-20 w-20 shrink-0 overflow-hidden bg-backdrop p-2 border border-border">
+          <Image
+            src={item.thumbnail}
+            alt={item.title}
+            fill
+            sizes="80px"
+            className="object-contain"
+          />
+        </div>
+
+        <div>
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/products/${item.productId}`}
+              className="type-display text-base text-ink line-clamp-1 hover:underline decoration-ctrl-red"
+            >
+              {item.title}
+            </Link>
+            {!isSelected && (
+              <span className="text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 bg-backdrop text-ink-soft border border-border">
+                Saved for later
+              </span>
+            )}
+          </div>
+
+          {/* Variant Specifications: Size & Color */}
+          <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs">
+            {item.selectedSize && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-backdrop border border-border text-ink font-semibold">
+                <span className="text-ink-soft text-[10px]">SIZE:</span>
+                <span>{item.selectedSize}</span>
+              </span>
+            )}
+            {item.selectedColor && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-backdrop border border-border text-ink-soft">
+                <span className="text-[10px]">COLOR:</span>
+                <span className="text-ink">{item.selectedColor}</span>
+              </span>
+            )}
+            {item.sku && (
+              <span className="text-[10px] text-ink-soft/70">
+                SKU: {item.sku}
+              </span>
+            )}
+          </div>
+
+          <div className="mt-1 flex items-center gap-3 text-xs text-ink-soft">
+            <p>
+              Unit: <span className="font-semibold tabular-nums text-ink">${item.price.toFixed(2)}</span>
+            </p>
+            <span>&bull;</span>
+            <span className="text-[11px] tabular-nums">
+              Available: {maxStock} units
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Stepper, Total, and Remove */}
+      <div className="flex items-center justify-between sm:justify-end gap-6 border-t border-border pt-3 sm:border-0 sm:pt-0">
+        {/* Minimalist Stepper */}
+        <div className="flex h-9 items-center border border-ink bg-paper">
+          <button
+            type="button"
+            onClick={() => updateQty(itemKey, item.quantity - 1, maxStock)}
+            disabled={item.quantity <= 1}
+            aria-label="Decrease quantity"
+            className="flex h-full w-8 items-center justify-center text-ink hover:text-ctrl-red disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+          >
+            -
+          </button>
+          <span className="w-8 text-center text-xs font-bold tabular-nums text-ink">
+            {item.quantity}
+          </span>
+          <button
+            type="button"
+            onClick={() => updateQty(itemKey, item.quantity + 1, maxStock)}
+            disabled={item.quantity >= maxStock}
+            aria-label="Increase quantity"
+            className="flex h-full w-8 items-center justify-center text-ink hover:text-ctrl-red disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
+          >
+            +
+          </button>
+        </div>
+
+        <div className="text-right min-w-20">
+          <span
+            className={`text-sm font-bold tabular-nums block ${
+              isSelected ? "text-ink" : "text-ink-soft"
+            }`}
+          >
+            ${lineTotal.toFixed(2)}
+          </span>
+          <button
+            type="button"
+            onClick={() => removeItem(itemKey)}
+            className="mt-0.5 text-[11px] text-ink-soft hover:text-ctrl-red transition-colors underline cursor-pointer"
+          >
+            Remove
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,152 @@
+export type Audience = "all" | "men" | "women" | "kids" | "unisex";
+export type Department = "all" | "clothes" | "shoes" | "accessories";
+export type Subcategory =
+  | "all"
+  // Clothes
+  | "tshirt"
+  | "sweater"
+  | "hoodies"
+  // Shoes
+  | "running"
+  | "basketball"
+  | "lifestyle"
+  // Accessories
+  | "hat"
+  | "jewelry"
+  | "socks";
+
+export type ProductVariant = {
+  id: number;
+  productId: number;
+  sku: string;
+  size?: string;
+  color?: string;
+  colorHex?: string;
+  price?: number;
+  stock: number;
+  isDefault?: boolean;
+  thumbnail?: string;
+};
+
+export type Product = {
+  id: number;
+  slug?: string;
+  title: string;
+  description: string;
+  price: number;
+  stock: number;
+  thumbnail: string;
+  category: string;
+
+  audience?: Audience;
+  department?: Department;
+  subcategory?: Subcategory;
+
+  fabric?: string;
+  sizes?: string[];
+  colors?: { name: string; hex?: string; thumbnail?: string }[];
+  variants?: ProductVariant[];
+  imageWidth?: number;
+  imageHeight?: number;
+};
+
+export type CartItem = {
+  id?: string;
+  productId: number;
+  variantId?: number;
+  sku?: string;
+  selectedSize?: string;
+  selectedColor?: string;
+  title: string;
+  price: number;
+  thumbnail: string;
+  quantity: number;
+  maxStock?: number;
+  selected?: boolean;
+};
+
+export type WishlistItem = {
+  productId: number;
+  title: string;
+  price: number;
+  thumbnail: string;
+  category: string;
+  audience?: Audience;
+  department?: Department;
+  subcategory?: Subcategory;
+  fabric?: string;
+  sizes?: string[];
+  stock: number;
+  addedAt: string;
+};
+
+export type ShippingMethod =
+  | "phnom_penh_express"
+  | "phnom_penh_standard"
+  | "provincial";
+
+export type PaymentMethod = "khqr" | "cod" | "card";
+
+export type Customer = {
+  name: string;
+  email: string;
+  phone: string;
+  telegram?: string;
+  address: string;
+
+  cityProvince: string;
+  khanDistrict?: string;
+  sangkatCommune?: string;
+  streetAddress: string;
+  landmark?: string;
+
+  street?: string;
+  apartment?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  country?: string;
+
+  shippingMethod?: ShippingMethod;
+  shippingCost?: number;
+  paymentMethod?: PaymentMethod;
+  cardNumberLast4?: string;
+  orderNotes?: string;
+};
+
+export type Order = {
+  id: string;
+  createdAt: string;
+  customer: Customer;
+  items: CartItem[];
+  subtotal: number;
+  shippingCost: number;
+  tax: number;
+  total: number;
+  totalKhr?: number;
+  trackingNumber?: string;
+  status?: "confirmed" | "processing" | "out_for_delivery" | "delivered" | "pending";
+  paymentStatus?: "PAID" | "UNPAID" | "PENDING" | "FAILED" | string;
+};
+
+export type UserAddress = {
+  cityProvince: string;
+  khanDistrict?: string;
+  sangkatCommune?: string;
+  streetAddress: string;
+  landmark?: string;
+  street?: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  country?: string;
+};
+
+export type User = {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  telegram?: string;
+  address?: UserAddress;
+};

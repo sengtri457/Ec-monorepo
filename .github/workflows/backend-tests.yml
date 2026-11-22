@@ -1,0 +1,45 @@
+name: Backend Microservices Test Suite
+
+on:
+  push:
+    branches: [ development, main, feat/** ]
+  pull_request:
+    branches: [ development, main ]
+
+jobs:
+  test-services:
+    name: Run Unit & API Tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service:
+          - ecommerce-django-backend
+          - services/user-service
+          - services/product-service
+          - services/order-service
+          - services/payment-service
+          - services/notification-service
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f "backend/${{ matrix.service }}/requirements.txt" ]; then
+            pip install -r "backend/${{ matrix.service }}/requirements.txt"
+          fi
+          pip install pytest pytest-django
+
+      - name: Run Pytest
+        working-directory: backend/${{ matrix.service }}
+        run: |
+          pytest --tb=short
