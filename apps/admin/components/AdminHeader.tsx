@@ -3,20 +3,16 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
-  Menu,
   Search,
   Building2,
   Bell,
   Plus,
   LogOut,
+  ExternalLink,
 } from "lucide-react";
 import { useAdminAuth } from "@/context/AdminAuthContext";
 
-export function AdminHeader({
-  onOpenMobile,
-}: {
-  onOpenMobile?: () => void;
-}) {
+export function AdminHeader() {
   const { user, logout } = useAdminAuth();
   const [gatewayOnline, setGatewayOnline] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -61,21 +57,48 @@ export function AdminHeader({
 
   return (
     <header className="h-20 bg-white border-b border-neutral-200/70 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-20">
-      {/* Left side: Mobile Toggle & Global Search Bar */}
-      <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0 mr-2 sm:mr-4">
-        {onOpenMobile && (
-          <button
-            type="button"
-            onClick={onOpenMobile}
-            className="md:hidden p-2 rounded-xl text-neutral-600 hover:bg-neutral-100 cursor-pointer"
-            aria-label="Toggle navigation menu"
+      {/* Left side: Brand Identity & Global Search */}
+      <div className="flex items-center gap-3 sm:gap-6 flex-1 min-w-0 mr-2 sm:mr-4">
+        {/* Brand Logomark */}
+        <Link
+          href="/"
+          className="flex items-center gap-2.5 shrink-0 group cursor-pointer"
+        >
+          <div
+            className="w-9 h-9 rounded-xl bg-[#0E0E12] border border-neutral-700/80 text-white font-bold flex items-center justify-center text-xs tracking-widest shadow-sm group-hover:bg-[#944434] transition-colors"
+            title="Clothes EC Admin Operations"
           >
-            <Menu className="w-5 h-5" />
-          </button>
-        )}
+            EC
+          </div>
+          <div className="hidden sm:block min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="font-bold text-sm tracking-tight text-neutral-900 group-hover:text-[#944434] transition-colors">
+                CLOTHES EC
+              </span>
+              <span className="px-1.5 py-0.2 text-[9px] font-bold text-[#944434] bg-[#944434]/10 rounded border border-[#944434]/20 uppercase">
+                Admin
+              </span>
+            </div>
+            <p className="text-[10px] text-neutral-400 font-medium tracking-wide">
+              Store Operations
+            </p>
+          </div>
+        </Link>
+
+        {/* Storefront External Shortcut */}
+        <a
+          href={process.env.NEXT_PUBLIC_STORE_URL || "http://localhost:3000"}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-neutral-500 hover:text-neutral-900 bg-neutral-100 hover:bg-neutral-200/70 rounded-lg transition-colors"
+          title="Open live customer storefront in new tab"
+        >
+          <span>Storefront</span>
+          <ExternalLink className="w-3 h-3 text-neutral-400" />
+        </a>
 
         {/* Global Search Bar with ⌘K badge */}
-        <div className="relative w-full max-w-[384px] min-w-0">
+        <div className="relative w-full max-w-[340px] min-w-0">
           <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-neutral-400">
             <Search className="w-4 h-4" />
           </div>
