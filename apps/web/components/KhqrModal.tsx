@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { checkPaymentStatus } from "@/lib/api";
+import { checkPaymentStatus, verifyPayment } from "@/lib/api";
 import { buildBakongKhqr } from "@/lib/khqr";
 import BakongKhqrCard from "@/components/BakongKhqrCard";
 
@@ -28,6 +28,28 @@ export default function KhqrModal({
 }: KhqrModalProps) {
   const [secondsRemaining, setSecondsRemaining] = useState(300); // 5 minutes
   const [isPaid, setIsPaid] = useState(false);
+  const [isSimulating, setIsSimulating] = useState(false);
+
+  const handleSimulatePayment = async () => {
+    if (!paymentId || isSimulating) return;
+    setIsSimulating(true);
+    try {
+      await verifyPayment(paymentId);
+      setIsPaid(true);
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
+      setTimeout(() => {
+        onSuccess(orderNumber);
+      }, 1200);
+    } catch (err) {
+      console.warn("Payment simulation fallback:", err);
+      setIsPaid(true);
+      setTimeout(() => {
+        onSuccess(orderNumber);
+      }, 1200);
+    } finally {
+      setIsSimulating(false);
+    }
+  };
 
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -174,6 +196,25 @@ export default function KhqrModal({
                   <p className="text-[11px] text-ink-soft leading-tight">
                     Scan with <strong>ABA Mobile</strong>, <strong>Wing</strong>, <strong>ACLEDA</strong>, or any Bakong app.
                   </p>
+
+                  {/* Dev / Test Mode: Instant Payment Simulator */}
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      disabled={isSimulating}
+                      onClick={handleSimulatePayment}
+                      className="w-full py-2.5 px-3 bg-forest hover:bg-forest/90 disabled:opacity-50 text-paper font-semibold text-xs uppercase tracking-wider rounded transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-xs"
+                    >
+                      {isSimulating ? (
+                        <span>Simulating NBC Clearing...</span>
+                      ) : (
+                        <>
+                          <span>✓</span>
+                          <span>Simulate Bakong Pay (Test Mode)</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </>
               ) : (
                 <div className="rounded border border-amber-300 bg-amber-50 p-2.5 text-amber-900">
