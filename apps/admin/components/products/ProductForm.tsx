@@ -18,6 +18,7 @@ import {
   fetchCategories,
 } from "@/lib/api/catalogApi";
 import { VariantMatrixEditor } from "./VariantMatrixEditor";
+import { ProductThumbnail } from "@/components/ui/ProductThumbnail";
 
 interface ProductFormProps {
   initialData?: AdminProduct;
@@ -455,10 +456,11 @@ export function ProductForm({
                   : "border-neutral-200"
               }`}
             >
-              <img
+              <ProductThumbnail
                 src={img.image_url}
                 alt={img.alt_text || "Product thumbnail"}
                 className="h-36 w-full object-cover bg-neutral-100"
+                fallbackClassName="flex h-36 w-full items-center justify-center bg-neutral-100 text-neutral-400"
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                 <button

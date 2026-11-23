@@ -12,6 +12,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { AdminProduct, fetchAdminProducts, patchAdminProduct } from "@/lib/api/catalogApi";
+import { ProductThumbnail } from "@/components/ui/ProductThumbnail";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState<AdminProduct[]>([]);
@@ -192,17 +193,12 @@ export default function AdminProductsPage() {
                     <tr key={p.id} className="hover:bg-neutral-50/80 transition-colors">
                       <td className="px-6 py-3.5">
                         <div className="flex items-center gap-3">
-                          {p.thumbnail ? (
-                            <img
-                              src={p.thumbnail}
-                              alt={p.title}
-                              className="h-10 w-10 rounded-lg object-cover bg-neutral-100 border border-neutral-200 shrink-0"
-                            />
-                          ) : (
-                            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-100 text-neutral-400 shrink-0">
-                              <Shirt className="h-5 w-5" />
-                            </div>
-                          )}
+                          <ProductThumbnail
+                            src={p.thumbnail}
+                            alt={p.title}
+                            className="h-10 w-10 rounded-lg object-cover bg-neutral-100 border border-neutral-200 shrink-0"
+                            fallbackClassName="flex h-10 w-10 items-center justify-center rounded-lg bg-neutral-100 text-neutral-400 border border-neutral-200 shrink-0"
+                          />
                           <div className="min-w-0 max-w-xs">
                             <Link
                               href={`/products/${p.id}/edit`}

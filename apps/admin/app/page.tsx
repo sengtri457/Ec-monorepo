@@ -18,6 +18,7 @@ import { adminApiClient } from "@/lib/adminApiClient";
 import { AdminDashboardStats, AdminInventoryItem, AdminOrderSummary } from "@ec/types";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { SalesTrajectoryChart } from "@/components/dashboard/SalesTrajectoryChart";
+import { ProductThumbnail } from "@/components/ui/ProductThumbnail";
 
 export default function AdminOverviewPage() {
   const [stats, setStats] = useState<AdminDashboardStats | null>(null);
@@ -40,6 +41,7 @@ export default function AdminOverviewPage() {
       {
         key: string;
         productTitle: string;
+        thumbnail?: string;
         categoryName?: string;
         totalStock: number;
         outOfStockCount: number;
@@ -55,6 +57,7 @@ export default function AdminOverviewPage() {
         map.set(key, {
           key,
           productTitle: title,
+          thumbnail: item.thumbnail,
           categoryName: item.category_name || item.categoryName,
           totalStock: 0,
           outOfStockCount: 0,
@@ -444,6 +447,14 @@ export default function AdminOverviewPage() {
                               <ChevronRight className="h-3.5 w-3.5" />
                             )}
                           </div>
+                          {group.thumbnail && (
+                            <ProductThumbnail
+                              src={group.thumbnail}
+                              alt={group.productTitle}
+                              className="h-7 w-7 rounded-md object-cover bg-neutral-100 border border-neutral-200 shrink-0"
+                              fallbackClassName="hidden"
+                            />
+                          )}
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5 flex-wrap">
                               <p className="truncate text-xs font-bold text-neutral-900">
