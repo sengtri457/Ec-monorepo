@@ -161,10 +161,14 @@ class InternalOrderStatusUpdateView(APIView):
                 notes=data.get('notes', 'Internal service status update')
             )
 
-        # On successful payment, confirm stock deduction and dispatch customer notification
+        # On successful payment, confirm stock deduction, provision delivery shipment, and dispatch customer notification
         if order.payment_status == 'PAID' and old_payment_status != 'PAID':
             if order.stock_reservation_id:
                 ProductServiceClient.confirm_stock(str(order.stock_reservation_id))
+            
+            from apps.orders.fulfillment import FulfillmentService
+            FulfillmentService.create_shipment_for_order(order)
+
             NotificationServiceClient.send_order_confirmation(order)
 
         return Response(OrderSerializer(order).data, status=status.HTTP_200_OK)
