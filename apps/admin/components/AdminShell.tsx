@@ -1,14 +1,28 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminHeader } from "./AdminHeader";
-import { X } from "lucide-react";
+import { getStorageItem, setStorageItem } from "@/lib/storage";
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  useEffect(() => {
+    const saved = getStorageItem<boolean>("ec_admin_sidebar_collapsed", false);
+    setIsCollapsed(saved);
+  }, []);
+
+  const handleToggleCollapse = () => {
+    setIsCollapsed((prev) => {
+      const next = !prev;
+      setStorageItem("ec_admin_sidebar_collapsed", next);
+      return next;
+    });
+  };
 
   // Do not wrap login page with administrative sidebar/header shell
   if (pathname === "/login") {
@@ -16,38 +30,39 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-slate-50">
+    <div className="min-h-screen bg-[#F8F9FA] text-neutral-900 flex flex-col">
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex md:shrink-0">
-        <AdminSidebar />
+      <div className="hidden md:block">
+        <AdminSidebar
+          isCollapsed={isCollapsed}
+          onToggleCollapse={handleToggleCollapse}
+        />
       </div>
 
       {/* Mobile Drawer Backdrop & Drawer */}
       {mobileOpen && (
         <div className="fixed inset-0 z-50 flex md:hidden">
           <div
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity"
             onClick={() => setMobileOpen(false)}
           />
-          <div className="relative flex w-full max-w-xs flex-1 flex-col bg-white">
-            <div className="absolute top-3 right-3">
-              <button
-                onClick={() => setMobileOpen(false)}
-                className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100"
-                aria-label="Close sidebar"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <AdminSidebar onCloseMobile={() => setMobileOpen(false)} />
+          <div className="relative flex w-full max-w-xs flex-1 flex-col">
+            <AdminSidebar
+              isCollapsed={false}
+              onCloseMobile={() => setMobileOpen(false)}
+            />
           </div>
         </div>
       )}
 
-      {/* Main Content Area */}
-      <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
+      {/* Main Content Area - dynamically indented based on sidebar width */}
+      <div
+        className={`flex flex-col flex-1 min-w-0 transition-all duration-300 ease-in-out ${
+          isCollapsed ? "md:pl-20" : "md:pl-64"
+        }`}
+      >
         <AdminHeader onOpenMobile={() => setMobileOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+        <main className="flex-1 p-4 sm:p-6 lg:p-8">
           <div className="mx-auto max-w-7xl">
             {children}
           </div>

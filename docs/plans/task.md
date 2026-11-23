@@ -1,8 +1,8 @@
 | Task | Description | Status |
 | :--- | :--- | :--- |
 | Task 1 | Design Tokens, Color Palette & Custom Scrollbars (`globals.css`) | Complete |
-| Task 2 | Collapsible Obsidian Admin Sidebar (`AdminSidebar.tsx`, `AdminShell.tsx`) | In Progress |
-| Task 3 | Refined Top Header with Search & Hub Pills (`AdminHeader.tsx`) | Not Started |
+| Task 2 | Collapsible Obsidian Admin Sidebar (`AdminSidebar.tsx`, `AdminShell.tsx`) | Complete |
+| Task 3 | Refined Top Header with Search & Hub Pills (`AdminHeader.tsx`) | In Progress |
 | Task 4 | Operations Overview Dashboard Hero & KPI Cards (`app/page.tsx`, `StatCard.tsx`) | Not Started |
 | Task 5 | Orders Queue & Slide-Over Inspector Drawer (`/orders`, `OrderDrawer.tsx`) | Not Started |
 | Task 6 | Variant Stock Matrix with Inline Cell Editing (`VariantStockMatrix.tsx`, `/inventory`) | Not Started |
