@@ -293,6 +293,8 @@ export type AdminOrderStatusHistory = {
 };
 
 export type AdminOrderDetail = Order & {
+  orderNumber?: string;
+  order_number?: string;
   statusHistory?: AdminOrderStatusHistory[];
   status_history?: AdminOrderStatusHistory[];
   shipment?: DeliveryShipment;
