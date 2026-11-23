@@ -1,8 +1,16 @@
 | Task | Description | Status |
 | :--- | :--- | :--- |
-| Task 1 | Delivery & Fulfillment Data Layer with Geolocation in Order Service (`DeliveryShipment` with coordinates, `DeliveryTimelineEvent`, migrations, serializers) | Complete |
-| Task 2 | Automatic Post-Payment Fulfillment Dispatch & Cambodia Geocoding (`FulfillmentService`, `CAMBODIA_COORDINATES` lookup table) | Complete |
-| Task 3 | Public, Internal & Rider Location REST APIs in Order Service (`/api/v1/orders/tracking/`, `/location/`, `/internal/.../status/`) | Complete |
-| Task 4 | Domain Types, Leaflet Setup & OSRM Road Route Server Action (`@ec/types`, `leaflet`, `app/actions/fetch-road-route.ts`, `api.ts`) | Complete |
-| Task 5 | Frontend Interactive Leaflet Map, Tracking Card & Dedicated Pages (`DeliveryMapView`, `DeliveryTrackingCard`, `/tracking/`, `/rider/`) | Complete |
-| Task 6 | Full End-to-End Automated Delivery & Map Verification Suite (`scripts/verify_delivery_pipeline.py`) | Complete |
+| Task 1 | Admin Authorization & JWT Augmentation in `user-service` | Complete |
+| Task 2 | Inventory Stock Management & Audit Endpoints in `product-service` | Complete |
+| Task 3 | Product Catalog Admin CRUD in `product-service` | Complete |
+| Task 4 | Admin Orders Queue & Lifecycle Management in `order-service` | Complete |
+| Task 5 | API Gateway Nginx Configuration Updates | Complete |
+| Task 6 | Shared Admin Domain Types in `@ec/types` | Complete |
+| Task 7 | Initialize `apps/admin` Project (Next.js 16 App Router) | Complete |
+| Task 8 | Admin API Client & Auth Guard in `apps/admin` | Complete |
+| Task 9 | Responsive Admin Shell (Sidebar, Header & Navigation) | In Progress |
+| Task 10 | Overview Dashboard Page (`apps/admin/app/page.tsx`) | Not Started |
+| Task 11 | Inventory Management View & Quick Restock Modal (`/inventory`, `/inventory/movements`) | Not Started |
+| Task 12 | Admin Orders Queue & Status Workflow (`/orders`, `/orders/[orderNumber]`) | Not Started |
+| Task 13 | Product Catalog List & Product Upsert Form (`/products`, `/products/new`, `/products/[id]/edit`) | Not Started |
+| Task 14 | Automated End-to-End Verification & Test Suite (`verify_admin_pipeline.py`, `pnpm --filter admin build`) | Not Started |

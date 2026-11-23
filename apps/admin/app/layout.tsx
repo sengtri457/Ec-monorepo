@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Providers } from "@/components/Providers";
 
 export const metadata: Metadata = {
   title: "Clothes EC - Admin Dashboard",
@@ -14,7 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased min-h-screen bg-[var(--background)] text-[var(--foreground)]">
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
