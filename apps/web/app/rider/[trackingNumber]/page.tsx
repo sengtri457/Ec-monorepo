@@ -31,7 +31,10 @@ export default function RiderTrackingPage({ params }: RiderTrackingProps) {
   const watchRef = useRef<number | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const positionRef = useRef(position);
-  positionRef.current = position;
+
+  useEffect(() => {
+    positionRef.current = position;
+  }, [position]);
 
   // Load initial shipment
   useEffect(() => {

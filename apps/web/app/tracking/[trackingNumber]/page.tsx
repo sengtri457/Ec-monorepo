@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { fetchDeliveryTracking } from "@/lib/api";
 import DeliveryTrackingCard from "@/components/delivery/DeliveryTrackingCard";
 
