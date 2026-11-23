@@ -12,5 +12,5 @@
 | Task 10 | Overview Dashboard Page (`apps/admin/app/page.tsx`) | Complete |
 | Task 11 | Inventory Management View & Quick Restock Modal (`/inventory`, `/inventory/movements`) | Complete |
 | Task 12 | Admin Orders Queue & Status Workflow (`/orders`, `/orders/[orderNumber]`) | Complete |
-| Task 13 | Product Catalog List & Product Upsert Form (`/products`, `/products/new`, `/products/[id]/edit`) | In Progress |
-| Task 14 | Automated End-to-End Verification & Test Suite (`verify_admin_pipeline.py`, `pnpm --filter admin build`) | Not Started |
+| Task 13 | Product Catalog List & Product Upsert Form (`/products`, `/products/new`, `/products/[id]/edit`) | Complete |
+| Task 14 | Automated End-to-End Verification & Test Suite (`verify_admin_pipeline.py`, `pnpm --filter admin build`) | In Progress |
