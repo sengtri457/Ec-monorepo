@@ -200,3 +200,112 @@ export type DeliveryShipment = {
   updatedAt: string;
 };
 
+export type StockMovementType =
+  | 'PURCHASE'
+  | 'RESTOCK'
+  | 'RETURN'
+  | 'ADJUSTMENT'
+  | 'RESERVATION'
+  | 'RELEASE';
+
+export type StockMovement = {
+  id: number;
+  variantId?: number;
+  sku: string;
+  productTitle?: string;
+  quantityChange: number;
+  movementType: StockMovementType;
+  referenceId?: string;
+  balanceAfter: number;
+  notes?: string;
+  createdAt: string;
+};
+
+export type AdminInventoryItem = {
+  id: number;
+  productId: number;
+  productTitle: string;
+  categoryName?: string;
+  department?: string;
+  sku: string;
+  size?: string;
+  color?: string;
+  colorHex?: string;
+  stock: number;
+  effectivePrice: number;
+  thumbnail?: string;
+  isActive: boolean;
+  lowStock: boolean;
+};
+
+export type AdminOrderSummary = {
+  id: string;
+  orderNumber: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone: string;
+  cityProvince: string;
+  totalUsd: number;
+  totalKhr?: number;
+  status: string;
+  paymentStatus: string;
+  shippingMethodName: string;
+  itemsCount: number;
+  createdAt: string;
+};
+
+export type AdminOrderStatusHistory = {
+  id: number;
+  fromStatus: string;
+  toStatus: string;
+  changedByUserId?: number | null;
+  notes?: string;
+  createdAt: string;
+};
+
+export type AdminOrderDetail = Order & {
+  statusHistory?: AdminOrderStatusHistory[];
+  shipment?: DeliveryShipment;
+  updatedAt?: string;
+};
+
+export type AdminDashboardStats = {
+  totalRevenue: number;
+  totalOrders: number;
+  pendingFulfillmentCount: number;
+  dispatchedCount: number;
+  recentOrders: AdminOrderSummary[];
+};
+
+export type ProductUpsertInput = {
+  title: string;
+  slug?: string;
+  description: string;
+  categoryId: number;
+  department: Department;
+  audience: Audience;
+  subcategory?: string;
+  fabric?: string;
+  basePrice: number;
+  isActive?: boolean;
+  isFeatured?: boolean;
+  variants?: {
+    id?: number;
+    sku: string;
+    size?: string;
+    color?: string;
+    colorHex?: string;
+    stock: number;
+    priceOverride?: number;
+    isDefault?: boolean;
+    isActive?: boolean;
+  }[];
+  images?: {
+    id?: number;
+    imageUrl: string;
+    altText?: string;
+    isPrimary?: boolean;
+    sortOrder?: number;
+  }[];
+};
+
