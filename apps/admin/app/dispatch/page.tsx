@@ -356,7 +356,7 @@ function DispatchContent() {
 
         {/* Pending Orders Dock (Drawer) */}
         {showOrdersDock && (
-          <div className="absolute top-4 left-4 bottom-4 z-20 w-88 bg-white/95 backdrop-blur-md rounded-2xl border border-neutral-200 shadow-2xl p-5 flex flex-col text-neutral-900 animate-in slide-in-from-left duration-200">
+          <div className="absolute top-4 left-4 right-4 sm:right-auto bottom-4 z-20 w-auto sm:w-88 max-w-[calc(100vw-2rem)] bg-white/95 backdrop-blur-md rounded-2xl border border-neutral-200 shadow-2xl p-4 sm:p-5 flex flex-col text-neutral-900 animate-in slide-in-from-left duration-200">
             <div className="flex items-center justify-between pb-3 border-b border-neutral-200">
               <div className="flex items-center gap-2">
                 <Package className="w-4 h-4 text-[#944434]" />

@@ -57,7 +57,7 @@ export function OrderDrawer({ orderNumber, onClose, onStatusChanged }: OrderDraw
     }
   }, [orderNumber, loadOrderDetail]);
 
-  // Handle escape key to close drawer
+  // Handle escape key to close drawer & lock body scroll
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -65,8 +65,14 @@ export function OrderDrawer({ orderNumber, onClose, onStatusChanged }: OrderDraw
       }
     };
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+    if (orderNumber) {
+      document.body.style.overflow = "hidden";
+    }
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [onClose, orderNumber]);
 
   if (!orderNumber) return null;
 
@@ -197,10 +203,10 @@ export function OrderDrawer({ orderNumber, onClose, onStatusChanged }: OrderDraw
       aria-labelledby="order-drawer-title"
     >
       <div
-        className="w-full max-w-xl bg-white h-full shadow-2xl border-l border-neutral-200 flex flex-col animate-in slide-in-from-right duration-200"
+        className="w-full max-w-full sm:max-w-xl bg-white h-full shadow-2xl border-l border-neutral-200 flex flex-col animate-in slide-in-from-right duration-200"
       >
         {/* Drawer Header */}
-        <div className="px-6 py-5 border-b border-neutral-200 flex items-center justify-between bg-neutral-50/70">
+        <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-neutral-200 flex items-center justify-between bg-neutral-50/70">
           <div>
             <div className="flex items-center gap-2.5">
               <h2 id="order-drawer-title" className="text-lg font-bold text-neutral-900 font-mono">
@@ -250,7 +256,7 @@ export function OrderDrawer({ orderNumber, onClose, onStatusChanged }: OrderDraw
         </div>
 
         {/* Drawer Body */}
-        <div className="p-6 space-y-6 flex-1 overflow-y-auto">
+        <div className="p-4 sm:p-6 space-y-5 sm:space-y-6 flex-1 overflow-y-auto">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-20 text-neutral-400 gap-3">
               <Loader2 className="w-6 h-6 animate-spin text-neutral-800" />
@@ -552,7 +558,7 @@ export function OrderDrawer({ orderNumber, onClose, onStatusChanged }: OrderDraw
         </div>
 
         {/* Drawer Footer */}
-        <div className="px-6 py-4 border-t border-neutral-200 bg-neutral-50 flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-3.5 sm:py-4 border-t border-neutral-200 bg-neutral-50 flex items-center justify-between">
           <Link
             href={`/orders/${ordNum}`}
             className="inline-flex items-center gap-1 text-xs font-semibold text-neutral-900 hover:text-neutral-700 underline"

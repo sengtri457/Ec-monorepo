@@ -50,7 +50,7 @@ export function CourierTelemetryDrawer({
   const isAssigned = Boolean(courier.assignedOrderNumber);
 
   return (
-    <div className="absolute top-4 right-4 z-30 w-84 bg-neutral-900/95 backdrop-blur-md rounded-2xl border border-neutral-700 shadow-2xl p-5 text-white animate-in slide-in-from-right duration-200">
+    <div className="absolute bottom-4 left-4 right-4 sm:bottom-auto sm:top-4 sm:left-auto sm:right-4 z-30 w-auto sm:w-84 max-w-[calc(100vw-2rem)] bg-neutral-900/95 backdrop-blur-md rounded-2xl border border-neutral-700 shadow-2xl p-4 sm:p-5 text-white animate-in slide-in-from-bottom sm:slide-in-from-right duration-200 max-h-[85vh] overflow-y-auto">
       {/* Header */}
       <div className="flex items-center justify-between pb-3.5 border-b border-neutral-800">
         <div className="flex items-center gap-3">

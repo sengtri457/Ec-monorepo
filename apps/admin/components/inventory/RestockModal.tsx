@@ -85,7 +85,7 @@ export function RestockModal({
       />
 
       {/* Modal Dialog */}
-      <div className="relative w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl ring-1 ring-slate-900/10">
+      <div className="relative w-full max-w-[calc(100vw-2rem)] sm:max-w-lg rounded-2xl bg-white p-5 sm:p-6 shadow-xl ring-1 ring-neutral-900/10">
         <div className="flex items-start justify-between border-b border-slate-100 pb-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-800">
