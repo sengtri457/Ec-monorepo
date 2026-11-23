@@ -159,7 +159,7 @@ export default function DeliveryMapView({ shipment, height = "380px", className 
       map.remove();
       mapRef.current = null;
     };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 2. Fetch True Road Route via OSRM Server Action and Render Polyline
   useEffect(() => {
@@ -250,7 +250,7 @@ export default function DeliveryMapView({ shipment, height = "380px", className 
     return () => {
       isMounted = false;
     };
-  }, [currentLat, currentLng, destLat, destLng, originLat, originLng]);
+  }, [currentLat, currentLng, destLat, destLng, originLat, originLng]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // 3. Update Rider Marker Live Position
   useEffect(() => {

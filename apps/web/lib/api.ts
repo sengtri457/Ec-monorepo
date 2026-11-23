@@ -26,6 +26,15 @@ interface DjangoVariantResponse {
   is_active?: boolean;
 }
 
+interface DjangoTimelineEventResponse {
+  id: number;
+  status: string;
+  title: string;
+  description: string;
+  location: string;
+  occurred_at: string;
+}
+
 interface DjangoProductResponse {
   id: number;
   slug: string;
@@ -456,7 +465,7 @@ export async function fetchDeliveryTracking(
       estimatedDeliveryAt: data.estimated_delivery_at,
       dispatchedAt: data.dispatched_at,
       deliveredAt: data.delivered_at,
-      timeline: (data.timeline || []).map((ev: any) => ({
+      timeline: (data.timeline || []).map((ev: DjangoTimelineEventResponse) => ({
         id: ev.id,
         status: ev.status,
         title: ev.title,
