@@ -90,6 +90,12 @@ class CheckoutView(APIView):
             skip_reservation=skip_reservation
         )
 
+        pay_method = customer_data.get('payment_method', 'KHQR').upper()
+        if pay_method == 'COD':
+            from apps.orders.fulfillment import FulfillmentService
+            FulfillmentService.create_shipment_for_order(order)
+            order.refresh_from_db()
+
         response_data = {
             'order': OrderSerializer(order).data,
             'guest_access_token': order.guest_access_token,
