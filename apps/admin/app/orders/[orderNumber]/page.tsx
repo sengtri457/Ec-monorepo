@@ -4,7 +4,6 @@ import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
-  ShoppingBag,
   Clock,
   CheckCircle2,
   Truck,
@@ -13,8 +12,6 @@ import {
   MapPin,
   CreditCard,
   AlertCircle,
-  FileText,
-  Navigation,
   ShieldAlert,
 } from "lucide-react";
 import { AdminOrderDetail } from "@ec/types";

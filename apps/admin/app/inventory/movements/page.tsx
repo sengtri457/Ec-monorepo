@@ -6,14 +6,12 @@ import {
   ArrowLeft,
   ArrowLeftRight,
   Search,
-  Filter,
   RefreshCw,
   PlusCircle,
   MinusCircle,
   RotateCcw,
-  CheckCircle,
 } from "lucide-react";
-import { StockMovement, StockMovementType } from "@ec/types";
+import { StockMovement } from "@ec/types";
 import { fetchStockMovements } from "@/lib/api/inventoryApi";
 
 export default function StockMovementsPage() {
@@ -195,7 +193,8 @@ export default function StockMovementsPage() {
                 </tr>
               ) : (
                 movements.map((m) => {
-                  const dateStr = new Date(m.created_at || m.createdAt || Date.now()).toLocaleString();
+                  const dateVal = m.created_at || m.createdAt;
+                  const dateStr = dateVal ? new Date(dateVal).toLocaleString() : "-";
                   const qty = m.quantity_change ?? m.quantityChange ?? 0;
                   const balance = m.balance_after ?? m.balanceAfter ?? 0;
                   const type = m.movement_type ?? m.movementType ?? "";

@@ -12,6 +12,7 @@ from apps.inventory.views import (
 urlpatterns = [
     # Admin inventory & stock adjustment
     path('api/v1/inventory/admin/', AdminInventoryListView.as_view(), name='admin-inventory-list'),
+    path('api/v1/inventory/admin/adjust/', AdminStockAdjustmentView.as_view(), name='admin-stock-adjust-body'),
     path('api/v1/inventory/admin/<int:variant_id>/adjust/', AdminStockAdjustmentView.as_view(), name='admin-stock-adjust'),
     path('api/v1/inventory/admin/movements/', AdminStockMovementListView.as_view(), name='admin-stock-movements'),
 

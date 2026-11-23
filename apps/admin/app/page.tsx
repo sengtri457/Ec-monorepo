@@ -312,7 +312,8 @@ export default function AdminOverviewPage() {
                   recentOrders.map((order) => {
                     const orderNum = order.order_number || order.orderNumber || order.id;
                     const custName = order.customer_name || order.customerName || "Customer";
-                    const orderDate = new Date(order.created_at || order.createdAt || Date.now()).toLocaleDateString();
+                    const dateVal = order.created_at || order.createdAt;
+                    const orderDate = dateVal ? new Date(dateVal).toLocaleDateString() : "-";
                     const itemsCt = order.items_count || order.itemsCount || 1;
                     const total = order.total_usd || order.totalUsd || 0;
                     const payStatus = order.payment_status || order.paymentStatus;

@@ -5,14 +5,12 @@ import Link from "next/link";
 import {
   ShoppingBag,
   Search,
-  Filter,
   RefreshCw,
   Clock,
   CheckCircle2,
   Truck,
   RotateCcw,
   ArrowRight,
-  ExternalLink,
 } from "lucide-react";
 import { AdminOrderSummary } from "@ec/types";
 import { fetchAdminOrders } from "@/lib/api/ordersApi";
@@ -249,7 +247,8 @@ export default function AdminOrdersQueuePage() {
                   const orderNum = o.order_number || o.orderNumber || o.id;
                   const custName = o.customer_name || o.customerName || "Customer";
                   const phone = o.customer_phone || o.customerPhone || "-";
-                  const dateStr = new Date(o.created_at || o.createdAt || Date.now()).toLocaleDateString();
+                  const dateVal = o.created_at || o.createdAt;
+                  const dateStr = dateVal ? new Date(dateVal).toLocaleDateString() : "-";
                   const city = o.city_province || o.cityProvince || "Phnom Penh";
                   const itemsCount = o.items_count || o.itemsCount || 1;
                   const total = o.total_usd || o.totalUsd || 0;

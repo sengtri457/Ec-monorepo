@@ -216,10 +216,14 @@ class AdminInventoryListView(APIView):
 class AdminStockAdjustmentView(APIView):
     permission_classes = [IsAdminOrStaffUser]
 
-    def post(self, request, variant_id):
+    def post(self, request, variant_id=None):
         serializer = AdminStockAdjustmentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
+
+        target_variant_id = variant_id or request.data.get('variant_id')
+        if not target_variant_id:
+            return Response({"error": "variant_id is required."}, status=status.HTTP_400_BAD_REQUEST)
 
         qty_change = data['quantity_change']
         m_type = data['movement_type']
@@ -228,10 +232,10 @@ class AdminStockAdjustmentView(APIView):
 
         with transaction.atomic():
             try:
-                variant = ProductVariant.objects.select_for_update().get(id=variant_id)
+                variant = ProductVariant.objects.select_for_update().get(id=target_variant_id)
             except ProductVariant.DoesNotExist:
                 return Response({
-                    "error": {"code": "VARIANT_NOT_FOUND", "message": f"Variant with id {variant_id} does not exist."}
+                    "error": {"code": "VARIANT_NOT_FOUND", "message": f"Variant with id {target_variant_id} does not exist."}
                 }, status=status.HTTP_404_NOT_FOUND)
 
             new_stock = variant.stock + qty_change
@@ -259,6 +263,7 @@ class AdminStockAdjustmentView(APIView):
             "variant_id": variant.id,
             "sku": variant.sku,
             "stock": variant.stock,
+            "balance_after": variant.stock,
             "movement": StockMovementSerializer(movement).data,
             "message": f"Stock successfully updated to {new_stock}."
         }, status=status.HTTP_200_OK)

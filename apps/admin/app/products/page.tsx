@@ -7,9 +7,7 @@ import {
   Search,
   Plus,
   RefreshCw,
-  ExternalLink,
   Edit,
-  Layers,
   CheckCircle2,
   XCircle,
 } from "lucide-react";

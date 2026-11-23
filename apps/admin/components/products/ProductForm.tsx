@@ -5,11 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  Image as ImageIcon,
   Plus,
   Trash2,
   AlertCircle,
-  CheckCircle2,
   Star,
 } from "lucide-react";
 import {

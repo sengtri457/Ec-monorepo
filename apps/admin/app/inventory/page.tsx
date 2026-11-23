@@ -5,8 +5,6 @@ import Link from "next/link";
 import {
   Boxes,
   Search,
-  Filter,
-  ArrowUpDown,
   History,
   AlertTriangle,
   CheckCircle2,

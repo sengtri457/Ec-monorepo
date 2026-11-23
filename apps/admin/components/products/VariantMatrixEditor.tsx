@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Plus, Trash2, Wand2, Layers, Check } from "lucide-react";
+import { Plus, Trash2, Wand2, Layers } from "lucide-react";
 import { AdminProductVariant } from "@/lib/api/catalogApi";
 
 interface VariantMatrixEditorProps {
@@ -11,15 +11,6 @@ interface VariantMatrixEditorProps {
 }
 
 const COMMON_SIZES = ["XS", "S", "M", "L", "XL", "XXL", "Free Size"];
-const PRESET_COLORS = [
-  { name: "Black", hex: "#000000" },
-  { name: "White", hex: "#FFFFFF" },
-  { name: "Navy", hex: "#001F3F" },
-  { name: "Gray", hex: "#808080" },
-  { name: "Olive", hex: "#556B2F" },
-  { name: "Beige", hex: "#F5F5DC" },
-  { name: "Burgundy", hex: "#800020" },
-];
 
 export function VariantMatrixEditor({
   variants,
