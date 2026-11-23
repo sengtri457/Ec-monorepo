@@ -195,16 +195,16 @@ export function ProductForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-8 max-w-5xl">
       {/* Top Bar Navigation */}
-      <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+      <div className="flex items-center justify-between border-b border-neutral-200 pb-4">
         <div>
           <Link
             href="/products"
-            className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-800 mb-1"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-neutral-500 hover:text-neutral-800 mb-1"
           >
             <ArrowLeft className="h-3 w-3" />
             <span>Back to Products</span>
           </Link>
-          <h2 className="text-xl font-bold tracking-tight text-slate-900">
+          <h2 className="text-xl font-bold tracking-tight text-neutral-900">
             {isEdit ? `Edit Product: ${initialData?.title}` : "Create New Apparel Product"}
           </h2>
         </div>
@@ -212,14 +212,14 @@ export function ProductForm({
         <div className="flex items-center gap-3">
           <Link
             href="/products"
-            className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+            className="rounded-lg border border-neutral-200 bg-white px-4 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50 transition"
           >
             Cancel
           </Link>
           <button
             type="submit"
             disabled={isSubmitting}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-slate-800 transition cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-900 hover:bg-[#944434] px-5 py-2 text-xs font-semibold text-white shadow-xs transition-colors cursor-pointer disabled:opacity-50"
           >
             {isSubmitting ? (
               <>
@@ -241,14 +241,14 @@ export function ProductForm({
       )}
 
       {/* Basic Attributes Card */}
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
-        <h3 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">
+      <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-xs space-y-4">
+        <h3 className="text-sm font-bold text-neutral-900 border-b border-neutral-100 pb-2">
           General Information
         </h3>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label className="block text-xs font-semibold text-neutral-700 mb-1">
               Product Title *
             </label>
             <input
@@ -257,12 +257,12 @@ export function ProductForm({
               placeholder="e.g. Classic Organic Cotton Crewneck T-Shirt"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-slate-800 focus:outline-hidden"
+              className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-xs text-neutral-900 focus:border-neutral-900 focus:outline-hidden"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label className="block text-xs font-semibold text-neutral-700 mb-1">
               Custom Slug (Optional, auto-generated from title if blank)
             </label>
             <input
@@ -270,18 +270,18 @@ export function ProductForm({
               placeholder="e.g. classic-organic-cotton-crewneck"
               value={slug}
               onChange={(e) => setSlug(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 font-mono text-xs text-slate-800 focus:border-slate-800 focus:outline-hidden"
+              className="w-full rounded-lg border border-neutral-200 px-3 py-2 font-mono text-xs text-neutral-800 focus:border-neutral-900 focus:outline-hidden"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label className="block text-xs font-semibold text-neutral-700 mb-1">
               Category *
             </label>
             <select
               value={categoryId}
               onChange={(e) => setCategoryId(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-slate-800 focus:outline-hidden"
+              className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs text-neutral-900 focus:border-neutral-900 focus:outline-hidden cursor-pointer"
             >
               {categories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
@@ -292,13 +292,13 @@ export function ProductForm({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label className="block text-xs font-semibold text-neutral-700 mb-1">
               Department *
             </label>
             <select
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-slate-800 focus:outline-hidden"
+              className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs text-neutral-900 focus:border-neutral-900 focus:outline-hidden cursor-pointer"
             >
               <option value="men">Men</option>
               <option value="women">Women</option>
@@ -308,13 +308,13 @@ export function ProductForm({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label className="block text-xs font-semibold text-neutral-700 mb-1">
               Audience
             </label>
             <select
               value={audience}
               onChange={(e) => setAudience(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 focus:border-slate-800 focus:outline-hidden"
+              className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs text-neutral-900 focus:border-neutral-900 focus:outline-hidden cursor-pointer"
             >
               <option value="adult">Adult</option>
               <option value="youth">Youth</option>
@@ -324,7 +324,7 @@ export function ProductForm({
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label className="block text-xs font-semibold text-neutral-700 mb-1">
               Subcategory
             </label>
             <input
@@ -332,12 +332,12 @@ export function ProductForm({
               placeholder="e.g. tops, bottoms, outerwear"
               value={subcategory}
               onChange={(e) => setSubcategory(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-800 focus:border-slate-800 focus:outline-hidden"
+              className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-xs text-neutral-800 focus:border-neutral-900 focus:outline-hidden"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label className="block text-xs font-semibold text-neutral-700 mb-1">
               Fabric Composition
             </label>
             <input
@@ -345,12 +345,12 @@ export function ProductForm({
               placeholder="e.g. 100% Combed Cotton, French Terry"
               value={fabric}
               onChange={(e) => setFabric(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-800 focus:border-slate-800 focus:outline-hidden"
+              className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-xs text-neutral-800 focus:border-neutral-900 focus:outline-hidden"
             />
           </div>
 
           <div className="sm:col-span-2">
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label className="block text-xs font-semibold text-neutral-700 mb-1">
               Product Description
             </label>
             <textarea
@@ -358,21 +358,21 @@ export function ProductForm({
               placeholder="Detailed marketing description, fit profile, and care instructions..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-900 focus:border-slate-800 focus:outline-hidden"
+              className="w-full rounded-lg border border-neutral-200 px-3 py-2 text-xs text-neutral-900 focus:border-neutral-900 focus:outline-hidden"
             />
           </div>
         </div>
       </div>
 
       {/* Pricing & Visibility Options */}
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
-        <h3 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-2">
+      <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-xs space-y-4">
+        <h3 className="text-sm font-bold text-neutral-900 border-b border-neutral-100 pb-2">
           Base Pricing & Storefront Visibility
         </h3>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            <label className="block text-xs font-semibold text-neutral-700 mb-1">
               Base Price ($USD) *
             </label>
             <input
@@ -382,7 +382,7 @@ export function ProductForm({
               required
               value={basePrice}
               onChange={(e) => setBasePrice(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 px-3 py-2 font-mono text-sm font-semibold text-slate-900 focus:border-slate-800 focus:outline-hidden"
+              className="w-full rounded-lg border border-neutral-200 px-3 py-2 font-mono text-sm font-semibold text-neutral-900 focus:border-neutral-900 focus:outline-hidden"
             />
           </div>
 
@@ -392,9 +392,9 @@ export function ProductForm({
               id="isActive"
               checked={isActive}
               onChange={(e) => setIsActive(e.target.checked)}
-              className="h-4 w-4 cursor-pointer rounded text-slate-900"
+              className="h-4 w-4 cursor-pointer rounded text-neutral-900 accent-[#944434]"
             />
-            <label htmlFor="isActive" className="cursor-pointer text-xs font-semibold text-slate-800">
+            <label htmlFor="isActive" className="cursor-pointer text-xs font-semibold text-neutral-800">
               Active (Visible in Storefront)
             </label>
           </div>
@@ -405,9 +405,9 @@ export function ProductForm({
               id="isFeatured"
               checked={isFeatured}
               onChange={(e) => setIsFeatured(e.target.checked)}
-              className="h-4 w-4 cursor-pointer rounded text-slate-900"
+              className="h-4 w-4 cursor-pointer rounded text-neutral-900 accent-[#944434]"
             />
-            <label htmlFor="isFeatured" className="cursor-pointer text-xs font-semibold text-slate-800">
+            <label htmlFor="isFeatured" className="cursor-pointer text-xs font-semibold text-neutral-800">
               Featured on Homepage
             </label>
           </div>
@@ -415,11 +415,11 @@ export function ProductForm({
       </div>
 
       {/* Image Gallery */}
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+      <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
           <div>
-            <h3 className="text-sm font-bold text-slate-900">Product Images</h3>
-            <p className="text-xs text-slate-500">
+            <h3 className="text-sm font-bold text-neutral-900">Product Images</h3>
+            <p className="text-xs text-neutral-500">
               Supply high-resolution media URLs. Click star to select thumbnail.
             </p>
           </div>
@@ -432,12 +432,12 @@ export function ProductForm({
             placeholder="Paste image URL (https://...)"
             value={newImageUrl}
             onChange={(e) => setNewImageUrl(e.target.value)}
-            className="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-800 focus:border-slate-800 focus:outline-hidden"
+            className="flex-1 rounded-lg border border-neutral-200 px-3 py-2 text-xs text-neutral-800 focus:border-neutral-900 focus:outline-hidden"
           />
           <button
             type="button"
             onClick={handleAddImage}
-            className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer"
+            className="inline-flex items-center gap-1 rounded-lg border border-neutral-300 bg-white px-3.5 py-2 text-xs font-semibold text-neutral-700 hover:bg-neutral-50 transition cursor-pointer"
           >
             <Plus className="h-3.5 w-3.5" />
             <span>Add Image</span>
@@ -451,21 +451,21 @@ export function ProductForm({
               key={idx}
               className={`relative group rounded-xl border overflow-hidden ${
                 img.is_primary
-                  ? "border-amber-400 ring-2 ring-amber-400/20"
-                  : "border-slate-200"
+                  ? "border-[#944434] ring-2 ring-[#944434]/20"
+                  : "border-neutral-200"
               }`}
             >
               <img
                 src={img.image_url}
                 alt={img.alt_text || "Product thumbnail"}
-                className="h-36 w-full object-cover bg-slate-100"
+                className="h-36 w-full object-cover bg-neutral-100"
               />
-              <div className="absolute inset-0 bg-slate-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                 <button
                   type="button"
                   onClick={() => handleSetPrimaryImage(idx)}
                   className={`rounded-lg p-1.5 transition ${
-                    img.is_primary ? "bg-amber-400 text-slate-900" : "bg-white text-slate-700 hover:bg-amber-100"
+                    img.is_primary ? "bg-[#944434] text-white" : "bg-white text-neutral-700 hover:bg-neutral-100"
                   }`}
                   title="Make Primary Thumbnail"
                 >
@@ -481,7 +481,7 @@ export function ProductForm({
                 </button>
               </div>
               {img.is_primary && (
-                <div className="absolute top-2 left-2 rounded bg-amber-400 px-1.5 py-0.5 text-[10px] font-bold text-slate-900 shadow-xs">
+                <div className="absolute top-2 left-2 rounded bg-[#944434] px-1.5 py-0.5 text-[10px] font-bold text-white shadow-xs">
                   Primary
                 </div>
               )}
@@ -491,7 +491,7 @@ export function ProductForm({
       </div>
 
       {/* Sizing & Color Variant Matrix */}
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
+      <div className="rounded-xl border border-neutral-200 bg-white p-6 shadow-xs">
         <VariantMatrixEditor
           variants={variants}
           onChange={setVariants}

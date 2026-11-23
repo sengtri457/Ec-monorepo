@@ -88,8 +88,8 @@ export function VariantMatrixEditor({
     <div className="space-y-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h4 className="text-sm font-bold text-slate-900">Variant Matrix</h4>
-          <p className="text-xs text-slate-500">
+          <h4 className="text-sm font-bold text-neutral-900">Variant Matrix</h4>
+          <p className="text-xs text-neutral-500">
             Define SKU, sizing, color variants, stock allocations, and price overrides.
           </p>
         </div>
@@ -98,7 +98,7 @@ export function VariantMatrixEditor({
           <button
             type="button"
             onClick={() => setShowGenerator(!showGenerator)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 transition cursor-pointer"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-700 shadow-2xs hover:bg-neutral-50 transition cursor-pointer"
           >
             <Wand2 className="h-3.5 w-3.5 text-indigo-500" />
             <span>Generate Sizes</span>
@@ -106,7 +106,7 @@ export function VariantMatrixEditor({
           <button
             type="button"
             onClick={handleAddRow}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-semibold text-white shadow-2xs hover:bg-slate-800 transition cursor-pointer"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-neutral-900 hover:bg-[#944434] px-3 py-1.5 text-xs font-semibold text-white shadow-2xs transition-colors cursor-pointer"
           >
             <Plus className="h-3.5 w-3.5" />
             <span>Add Variant</span>
@@ -218,9 +218,9 @@ export function VariantMatrixEditor({
       )}
 
       {/* Variant Table */}
-      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white">
-        <table className="w-full text-left text-xs">
-          <thead className="border-b border-slate-200 bg-slate-50 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+      <div className="overflow-x-auto rounded-xl border border-neutral-200 bg-white shadow-xs">
+        <table className="w-full text-left text-xs min-w-[700px]">
+          <thead className="border-b border-neutral-200 bg-neutral-50/80 text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
             <tr>
               <th className="px-4 py-3">SKU</th>
               <th className="px-3 py-3">Size</th>
@@ -233,17 +233,17 @@ export function VariantMatrixEditor({
               <th className="px-4 py-3 text-right">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-neutral-100">
             {variants.length === 0 ? (
               <tr>
-                <td colSpan={9} className="px-4 py-8 text-center text-slate-400">
-                  <Layers className="mx-auto h-6 w-6 text-slate-300 mb-1" />
+                <td colSpan={9} className="px-4 py-8 text-center text-neutral-400">
+                  <Layers className="mx-auto h-6 w-6 text-neutral-300 mb-1" />
                   <span>No variants defined. Click "Add Variant" or "Generate Sizes".</span>
                 </td>
               </tr>
             ) : (
               variants.map((v, idx) => (
-                <tr key={idx} className="hover:bg-slate-50/50">
+                <tr key={idx} className="hover:bg-neutral-50/50">
                   <td className="px-4 py-2">
                     <input
                       type="text"
