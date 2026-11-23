@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import {
   RefreshCw,
@@ -11,6 +11,8 @@ import {
   Clock,
   CheckCircle2,
   RotateCcw,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { adminApiClient } from "@/lib/adminApiClient";
 import { AdminDashboardStats, AdminInventoryItem, AdminOrderSummary } from "@ec/types";
@@ -23,6 +25,53 @@ export default function AdminOverviewPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [expandedProducts, setExpandedProducts] = useState<Record<string, boolean>>({});
+
+  const toggleProductExpand = (productKey: string) => {
+    setExpandedProducts((prev) => ({
+      ...prev,
+      [productKey]: !prev[productKey],
+    }));
+  };
+
+  const groupedCriticalStock = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        key: string;
+        productTitle: string;
+        categoryName?: string;
+        totalStock: number;
+        outOfStockCount: number;
+        variants: AdminInventoryItem[];
+      }
+    >();
+
+    lowStockItems.forEach((item) => {
+      const title = item.product_title || item.productTitle || "Apparel Item";
+      const key = String(item.product_id || item.productId || title);
+
+      if (!map.has(key)) {
+        map.set(key, {
+          key,
+          productTitle: title,
+          categoryName: item.category_name || item.categoryName,
+          totalStock: 0,
+          outOfStockCount: 0,
+          variants: [],
+        });
+      }
+
+      const group = map.get(key)!;
+      group.totalStock += item.stock;
+      if (item.stock === 0) {
+        group.outOfStockCount += 1;
+      }
+      group.variants.push(item);
+    });
+
+    return Array.from(map.values());
+  }, [lowStockItems]);
 
   const loadDashboardData = useCallback(async (isRefresh = false) => {
     if (isRefresh) {
@@ -36,7 +85,7 @@ export default function AdminOverviewPage() {
       const [statsData, inventoryData] = await Promise.all([
         adminApiClient<AdminDashboardStats>("/orders/admin/stats/"),
         adminApiClient<{ count: number; results: AdminInventoryItem[] }>(
-          "/inventory/admin/?status=low&limit=5"
+          "/inventory/admin/?status=low&limit=20"
         ),
       ]);
 
@@ -136,66 +185,41 @@ export default function AdminOverviewPage() {
 
   return (
     <div className="space-y-8 w-full pb-10">
-      {/* Store Analytics & Operations Hero Banner */}
-      <section className="relative overflow-hidden rounded-3xl bg-[#0E0E12] border border-neutral-800/80 p-6 sm:p-8 lg:p-10 text-white shadow-xl">
-        {/* Hero Top Control Row */}
-        <div className="relative z-10 flex items-center justify-between gap-4 mb-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-bold tracking-widest text-[#E07A5F] bg-[#944434]/20 border border-[#944434]/30 uppercase">
-            <span>Store Operations Hub</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => loadDashboardData(true)}
-              disabled={isRefreshing}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-neutral-300 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl cursor-pointer transition-all backdrop-blur-xs disabled:opacity-50"
-              title="Refresh Dashboard Metrics"
-            >
-              <RefreshCw
-                className={`w-3.5 h-3.5 text-neutral-400 ${
-                  isRefreshing ? "animate-spin text-white" : ""
-                }`}
-              />
-              <span>Refresh</span>
-            </button>
-            <Link
-              href="/dispatch"
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-[#944434] hover:bg-[#7E3729] rounded-xl shadow-xs cursor-pointer transition-colors"
-            >
-              <Truck className="w-3.5 h-3.5" />
-              <span>Dispatch Hub</span>
-            </Link>
-          </div>
+      {/* Page Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-neutral-900">
+            Operations Control Center
+          </h1>
+          <p className="mt-1 text-xs text-neutral-500">
+            Real-time revenue telemetry, fulfillment queue, and inventory stock monitoring.
+          </p>
         </div>
 
-        {/* Hero Content Row */}
-        <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6 xl:gap-8">
-          {/* Left Column: Heading & Description */}
-          <div className="max-w-2xl">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white">
-              Operations Control Center
-            </h1>
-            <p className="text-xs sm:text-[13px] text-neutral-400 mt-2.5 leading-relaxed font-sans max-w-xl">
-              Real-time revenue telemetry, customer fulfillment queue, and automated inventory replenishment monitoring.
-            </p>
-          </div>
-
-          {/* Right Column: Net Revenue Snapshot (Glass Card) */}
-          <div className="w-full sm:w-72 xl:w-80 bg-white/[0.04] backdrop-blur-md border border-white/10 rounded-2xl p-5 sm:p-6 shrink-0 self-start xl:self-center shadow-inner">
-            <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
-              Total Revenue (MTD)
-            </p>
-            <p className="text-2xl sm:text-3xl font-bold font-sans tracking-tight text-white mt-1.5">
-              {isLoading ? "..." : formatCurrency(revenue)}
-            </p>
-            <div className="flex items-center gap-1.5 mt-2 text-xs font-semibold text-emerald-400">
-              <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>Settled via KHQR & Gateway</span>
-            </div>
-          </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => loadDashboardData(true)}
+            disabled={isRefreshing}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-neutral-700 bg-white hover:bg-neutral-50 border border-neutral-200 rounded-xl shadow-xs cursor-pointer transition-colors disabled:opacity-50"
+            title="Refresh Dashboard Metrics"
+          >
+            <RefreshCw
+              className={`w-3.5 h-3.5 text-neutral-500 ${
+                isRefreshing ? "animate-spin text-neutral-900" : ""
+              }`}
+            />
+            <span>Refresh</span>
+          </button>
+          <Link
+            href="/dispatch"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-white bg-[#944434] hover:bg-[#7E3729] rounded-xl shadow-xs cursor-pointer transition-colors"
+          >
+            <Truck className="w-3.5 h-3.5" />
+            <span>Dispatch Hub</span>
+          </Link>
         </div>
-      </section>
+      </div>
 
       {errorMessage && (
         <div className="rounded-2xl border border-rose-200 bg-rose-50/90 p-4 text-xs text-rose-800 shadow-xs">
@@ -347,64 +371,186 @@ export default function AdminOverviewPage() {
           <div>
             <div className="flex items-center justify-between border-b border-neutral-200/70 px-6 py-4 bg-neutral-50/40">
               <div>
-                <h2 className="text-sm font-bold text-neutral-900">Critical Stock</h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm font-bold text-neutral-900">Critical Stock</h2>
+                  {groupedCriticalStock.length > 0 && (
+                    <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-800">
+                      {groupedCriticalStock.length} {groupedCriticalStock.length === 1 ? "Product" : "Products"}
+                    </span>
+                  )}
+                </div>
                 <p className="text-[11px] text-neutral-500">Variants nearing replenishment</p>
               </div>
-              <Link
-                href="/inventory"
-                className="text-xs font-semibold text-[#944434] hover:text-[#7E3729] flex items-center gap-1"
-              >
-                <span>Manage</span>
-                <ArrowRight className="h-3 w-3" />
-              </Link>
+              <div className="flex items-center gap-2.5">
+                {groupedCriticalStock.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const allExpanded = groupedCriticalStock.every((g) => expandedProducts[g.key]);
+                      const nextState: Record<string, boolean> = {};
+                      groupedCriticalStock.forEach((g) => {
+                        nextState[g.key] = !allExpanded;
+                      });
+                      setExpandedProducts(nextState);
+                    }}
+                    className="text-[11px] font-semibold text-neutral-500 hover:text-neutral-900 cursor-pointer"
+                  >
+                    {groupedCriticalStock.every((g) => expandedProducts[g.key]) ? "Collapse All" : "Expand All"}
+                  </button>
+                )}
+                <Link
+                  href="/inventory"
+                  className="text-xs font-semibold text-[#944434] hover:text-[#7E3729] flex items-center gap-1"
+                >
+                  <span>Manage</span>
+                  <ArrowRight className="h-3 w-3" />
+                </Link>
+              </div>
             </div>
 
-            <div className="divide-y divide-neutral-100 p-2">
+            <div className="p-3 space-y-2">
               {isLoading ? (
                 <div className="py-12 text-center text-xs text-neutral-400">
                   Checking inventory levels...
                 </div>
-              ) : lowStockItems.length === 0 ? (
+              ) : groupedCriticalStock.length === 0 ? (
                 <div className="py-12 text-center">
                   <Boxes className="mx-auto h-8 w-8 text-emerald-500 mb-2" />
                   <p className="text-xs font-semibold text-neutral-700">Healthy Stock Levels</p>
                   <p className="text-[11px] text-neutral-400 mt-1">No items currently below threshold.</p>
                 </div>
               ) : (
-                lowStockItems.map((item) => {
-                  const title = item.product_title || item.productTitle || "Product";
-                  const sku = item.sku;
-                  const stock = item.stock;
-                  const size = item.size;
-                  const color = item.color;
+                groupedCriticalStock.map((group) => {
+                  const isExpanded = !!expandedProducts[group.key];
+                  const variantCount = group.variants.length;
 
                   return (
                     <div
-                      key={item.id}
-                      className="flex items-center justify-between p-3 hover:bg-neutral-50 rounded-xl transition-colors"
+                      key={group.key}
+                      className="overflow-hidden rounded-xl border border-neutral-200/80 bg-white transition-all hover:border-neutral-300"
                     >
-                      <div className="min-w-0 flex-1 pr-3">
-                        <p className="truncate text-xs font-bold text-neutral-900">{title}</p>
-                        <div className="mt-0.5 flex items-center gap-2 text-[11px] text-neutral-500">
-                          <span className="font-mono text-neutral-600 font-medium">{sku}</span>
-                          {(size || color) && (
-                            <span>
-                              • {size} {color ? `/ ${color}` : ""}
-                            </span>
-                          )}
+                      {/* Product Header (Clickable Accordion) */}
+                      <button
+                        type="button"
+                        onClick={() => toggleProductExpand(group.key)}
+                        className="w-full text-left p-3 flex items-center justify-between gap-3 hover:bg-neutral-50/80 transition-colors cursor-pointer select-none"
+                        aria-expanded={isExpanded}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-neutral-600 transition-colors">
+                            {isExpanded ? (
+                              <ChevronDown className="h-3.5 w-3.5" />
+                            ) : (
+                              <ChevronRight className="h-3.5 w-3.5" />
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <p className="truncate text-xs font-bold text-neutral-900">
+                                {group.productTitle}
+                              </p>
+                              {group.outOfStockCount > 0 && (
+                                <span className="shrink-0 rounded bg-rose-50 px-1.5 py-0.5 text-[9px] font-bold text-rose-700 ring-1 ring-rose-600/20">
+                                  {group.outOfStockCount} OOS
+                                </span>
+                              )}
+                            </div>
+                            <div className="mt-0.5 flex items-center gap-2 text-[10px] text-neutral-500">
+                              <span className="font-medium text-neutral-600">
+                                {variantCount} {variantCount === 1 ? "size/variant" : "sizes/variants"} low
+                              </span>
+                              {group.categoryName && (
+                                <>
+                                  <span>•</span>
+                                  <span>{group.categoryName}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="text-right shrink-0">
-                        <span
-                          className={`inline-block rounded-md px-2 py-0.5 text-xs font-bold font-mono ${
-                            stock === 0
-                              ? "bg-rose-100 text-rose-800"
-                              : "bg-amber-100 text-amber-800"
-                          }`}
-                        >
-                          {stock} left
-                        </span>
-                      </div>
+
+                        <div className="shrink-0">
+                          <span
+                            className={`inline-block rounded-md px-2 py-0.5 text-xs font-bold font-mono ${
+                              group.totalStock === 0
+                                ? "bg-rose-100 text-rose-800"
+                                : "bg-amber-100 text-amber-800"
+                            }`}
+                          >
+                            {group.totalStock} units
+                          </span>
+                        </div>
+                      </button>
+
+                      {/* Collapsible Variants List */}
+                      {isExpanded && (
+                        <div className="border-t border-neutral-100 bg-neutral-50/60 p-2.5 space-y-1.5">
+                          <div className="text-[10px] font-semibold uppercase tracking-wider text-neutral-400 px-1">
+                            Low Stock Sizes &amp; Variants
+                          </div>
+                          <div className="divide-y divide-neutral-200/60 rounded-lg border border-neutral-200/70 bg-white overflow-hidden">
+                            {group.variants.map((v) => {
+                              const sku = v.sku;
+                              const size = v.size;
+                              const color = v.color;
+                              const colorHex = v.color_hex || v.colorHex;
+                              const stock = v.stock;
+
+                              return (
+                                <div
+                                  key={v.id}
+                                  className="flex items-center justify-between px-3 py-2 text-xs hover:bg-neutral-50/60 transition-colors"
+                                >
+                                  <div className="flex items-center gap-2 min-w-0 pr-2">
+                                    {size ? (
+                                      <span className="inline-flex items-center rounded bg-neutral-100 px-1.5 py-0.5 font-mono text-[11px] font-bold text-neutral-800 border border-neutral-200">
+                                        {size}
+                                      </span>
+                                    ) : (
+                                      <span className="text-[11px] text-neutral-400">Std</span>
+                                    )}
+
+                                    {color && (
+                                      <div className="flex items-center gap-1.5 text-[11px] text-neutral-600 truncate">
+                                        {colorHex && (
+                                          <span
+                                            className="inline-block h-2.5 w-2.5 rounded-full border border-black/10 shrink-0"
+                                            style={{ backgroundColor: colorHex }}
+                                            title={color}
+                                          />
+                                        )}
+                                        <span className="truncate">{color}</span>
+                                      </div>
+                                    )}
+
+                                    <span className="font-mono text-[10px] text-neutral-400 truncate">
+                                      {sku}
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    <span
+                                      className={`font-mono text-[11px] font-bold px-2 py-0.5 rounded ${
+                                        stock === 0
+                                          ? "bg-rose-100 text-rose-800"
+                                          : "bg-amber-100 text-amber-800"
+                                      }`}
+                                    >
+                                      {stock} left
+                                    </span>
+                                    <Link
+                                      href={`/inventory?search=${encodeURIComponent(sku)}`}
+                                      className="text-[10px] font-semibold text-[#944434] hover:underline"
+                                    >
+                                      Restock
+                                    </Link>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })
