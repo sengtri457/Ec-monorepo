@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Order, DeliveryShipment } from "@/types";
 import { getOrderById } from "@/lib/orders";
-import { fetchOrderDetail, fetchDeliveryTracking } from "@/lib/api";
+import { fetchDeliveryTracking, fetchOrderDetail } from "@/lib/api";
 import { downloadInvoice } from "@/lib/downloadInvoice";
 import { toKhr } from "@/lib/cambodiaLocations";
 import OrderStepper from "@/components/OrderStepper";
@@ -124,7 +124,7 @@ export default function InvoiceClient({ orderId, token }: InvoiceClientProps) {
 
   const trackingNumber = order.trackingNumber || `KH-${order.id.slice(-7)}`;
   const shippingCost = typeof order.shippingCost === "number" ? order.shippingCost : 0;
-  
+
   const shippingName = order.customer.shippingMethod === "phnom_penh_express"
     ? "Phnom Penh Express (Same-Day Rider)"
     : order.customer.shippingMethod === "phnom_penh_standard"
