@@ -65,6 +65,29 @@ class LoginView(APIView):
             "tokens": tokens
         }, status=status.HTTP_200_OK)
 
+class AdminLoginView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        serializer = UserLoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        if not (user.is_staff or user.is_superuser):
+            return Response({
+                "error": {
+                    "code": "FORBIDDEN",
+                    "message": "Access restricted. Administrator privileges required."
+                }
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        tokens = generate_tokens_for_user(user)
+        user_data = UserDetailSerializer(user).data
+        return Response({
+            "message": "Admin login successful.",
+            "user": user_data,
+            "tokens": tokens
+        }, status=status.HTTP_200_OK)
+
 class GoogleAuthView(APIView):
     permission_classes = [permissions.AllowAny]
 

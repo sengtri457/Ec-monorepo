@@ -2,6 +2,7 @@ from django.urls import path
 from apps.accounts.views import (
     RegisterView,
     LoginView,
+    AdminLoginView,
     GoogleAuthView,
     RefreshTokenView,
     CurrentUserView,
@@ -18,6 +19,7 @@ urlpatterns = [
     # Auth routes
     path('api/v1/auth/register/', RegisterView.as_view(), name='auth-register'),
     path('api/v1/auth/login/', LoginView.as_view(), name='auth-login'),
+    path('api/v1/auth/admin/login/', AdminLoginView.as_view(), name='auth-admin-login'),
     path('api/v1/auth/google/', GoogleAuthView.as_view(), name='auth-google'),
     path('api/v1/auth/refresh/', RefreshTokenView.as_view(), name='auth-refresh'),
 
