@@ -6,8 +6,10 @@
   "scripts": {
     "dev": "turbo run dev",
     "dev:web": "pnpm --filter web dev",
+    "dev:admin": "pnpm --filter admin dev",
     "build": "turbo run build",
     "build:web": "pnpm --filter web build",
+    "build:admin": "pnpm --filter admin build",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "clean": "turbo run clean",
