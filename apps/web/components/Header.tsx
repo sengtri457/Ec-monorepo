@@ -391,6 +391,15 @@ export default function Header() {
                   Sale
                 </span>
               </button>
+
+              {/* 7. Live Delivery Tracking */}
+              <Link
+                href="/tracking"
+                className="px-3 py-4 transition-colors hover:text-ink flex items-center gap-1.5 text-ctrl-red font-medium"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-ctrl-red animate-ping" />
+                <span>Track Order</span>
+              </Link>
             </nav>
           </div>
 
@@ -1271,6 +1280,19 @@ export default function Header() {
                     -30%
                   </span>
                 </button>
+
+                {/* Live Delivery Tracking Mobile Link */}
+                <Link
+                  href="/tracking"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="flex items-center justify-between w-full py-2 text-xs font-semibold uppercase tracking-wider text-ctrl-red"
+                >
+                  <span className="flex items-center gap-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-ctrl-red animate-ping" />
+                    <span>Track Order (Live Map)</span>
+                  </span>
+                  <span>&rarr;</span>
+                </Link>
               </div>
 
               {/* Drawer Bottom */}

@@ -5,13 +5,13 @@ from .models import Order, OrderItem, DeliveryShipment, DeliveryTimelineEvent
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
-    readonly_fields = ('product_id', 'variant_id', 'product_name', 'variant_name', 'sku', 'unit_price', 'quantity', 'total_price')
+    readonly_fields = ('product_title', 'sku', 'size', 'color', 'unit_price', 'quantity', 'line_total')
 
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('order_number', 'user_id', 'status', 'total_amount', 'currency', 'created_at')
-    list_filter = ('status', 'currency', 'created_at')
+    list_display = ('order_number', 'user_id', 'status', 'payment_status', 'total_usd', 'total_khr', 'created_at')
+    list_filter = ('status', 'payment_status', 'created_at')
     search_fields = ('order_number', 'user_id', 'customer_email', 'customer_phone')
     inlines = [OrderItemInline]
 
@@ -19,7 +19,7 @@ class OrderAdmin(admin.ModelAdmin):
 class DeliveryTimelineEventInline(admin.TabularInline):
     model = DeliveryTimelineEvent
     extra = 0
-    readonly_fields = ('timestamp',)
+    readonly_fields = ('occurred_at',)
 
 
 @admin.register(DeliveryShipment)
@@ -32,6 +32,6 @@ class DeliveryShipmentAdmin(admin.ModelAdmin):
 
 @admin.register(DeliveryTimelineEvent)
 class DeliveryTimelineEventAdmin(admin.ModelAdmin):
-    list_display = ('shipment', 'status', 'title', 'location_name', 'timestamp')
-    list_filter = ('status', 'timestamp')
-    search_fields = ('shipment__tracking_number', 'title', 'location_name')
+    list_display = ('shipment', 'status', 'title', 'location', 'occurred_at')
+    list_filter = ('status', 'occurred_at')
+    search_fields = ('shipment__tracking_number', 'title', 'location')

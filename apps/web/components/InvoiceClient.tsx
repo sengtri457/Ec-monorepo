@@ -169,7 +169,17 @@ export default function InvoiceClient({ orderId, token }: InvoiceClientProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          {trackingNumber && (
+            <Link
+              href={`/tracking/${trackingNumber}`}
+              className="type-label inline-flex items-center justify-center gap-1.5 border border-ctrl-red/30 bg-ctrl-red/10 px-4 py-2 text-xs uppercase tracking-wider text-ctrl-red hover:bg-ctrl-red hover:text-paper transition-all cursor-pointer font-semibold shadow-xs"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-ctrl-red animate-ping" />
+              <span>Live Tracking Map &rarr;</span>
+            </Link>
+          )}
+
           <button
             type="button"
             onClick={() => window.print()}
@@ -263,9 +273,13 @@ export default function InvoiceClient({ orderId, token }: InvoiceClientProps) {
             <span className="type-label text-[10px] uppercase tracking-wider text-ink-soft block">
               Courier Tracking
             </span>
-            <span className="text-xs font-semibold tabular-nums text-ink mt-0.5 block">
-              {trackingNumber}
-            </span>
+            <Link
+              href={`/tracking/${trackingNumber}`}
+              className="text-xs font-semibold tabular-nums text-ctrl-red hover:underline mt-0.5 inline-flex items-center gap-1 group"
+            >
+              <span>{trackingNumber}</span>
+              <span className="text-[10px] group-hover:translate-x-0.5 transition-transform">&rarr;</span>
+            </Link>
           </div>
           <div className="p-4">
             <span className="type-label text-[10px] uppercase tracking-wider text-ink-soft block">
