@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   Menu,
@@ -20,6 +20,18 @@ export function AdminHeader({
   const { user, logout } = useAdminAuth();
   const [gatewayOnline, setGatewayOnline] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
@@ -68,14 +80,19 @@ export function AdminHeader({
             <Search className="w-4 h-4" />
           </div>
           <input
+            ref={searchInputRef}
             type="text"
             placeholder="Search orders, SKU, courier or products..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-14 py-2 text-xs bg-neutral-50/80 hover:bg-neutral-50 focus:bg-white text-neutral-800 placeholder-neutral-400 border border-neutral-200/80 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-[#944434]/20 focus:border-[#944434] transition-all"
           />
-          <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-            <kbd className="px-1.5 py-0.5 text-[10px] font-semibold text-neutral-400 bg-white border border-neutral-200 rounded shadow-2xs">
+          <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+            <kbd
+              onClick={() => searchInputRef.current?.focus()}
+              className="px-1.5 py-0.5 text-[10px] font-semibold text-neutral-400 hover:text-neutral-700 bg-white border border-neutral-200 rounded shadow-2xs cursor-pointer select-none transition-colors"
+              title="Press ⌘K or Ctrl+K to search"
+            >
               ⌘K
             </kbd>
           </div>

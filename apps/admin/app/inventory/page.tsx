@@ -94,7 +94,7 @@ export default function InventoryPage() {
       <div className="flex flex-col gap-4 rounded-xl border border-neutral-200 bg-white p-4 shadow-xs">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           {/* Search Input */}
-          <div className="relative flex-1 max-w-md">
+          <div className="relative flex-1 min-w-0 max-w-md">
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-neutral-400" />
             <input
               type="text"

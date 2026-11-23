@@ -165,7 +165,7 @@ export function VariantStockMatrix({
 
       {/* Table */}
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-xs">
+        <table className="w-full text-left text-xs min-w-[820px]">
           <thead className="bg-neutral-50 border-b border-neutral-200 text-neutral-600 font-semibold uppercase tracking-wider text-[11px]">
             <tr>
               <th scope="col" className="py-3 px-5">Color & Spec</th>

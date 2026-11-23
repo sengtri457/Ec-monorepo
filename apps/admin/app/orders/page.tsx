@@ -227,7 +227,7 @@ export default function AdminOrdersQueuePage() {
       {/* Orders Table */}
       <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-xs">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full text-left text-xs min-w-[760px]">
             <thead className="border-b border-neutral-200 bg-neutral-50/80 text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
               <tr>
                 <th className="px-6 py-3.5">Order Number</th>
@@ -278,18 +278,18 @@ export default function AdminOrdersQueuePage() {
                       onClick={() => setSelectedOrderNumber(orderNum)}
                       className="hover:bg-neutral-50/80 transition-colors cursor-pointer group"
                     >
-                      <td className="px-6 py-3.5 font-bold font-mono text-neutral-900">
+                      <td className="px-6 py-3.5 font-bold font-mono text-neutral-900 whitespace-nowrap">
                         <span className="group-hover:text-[#944434] transition-colors">
                           {orderNum}
                         </span>
                       </td>
                       <td className="px-4 py-3.5 text-neutral-500 whitespace-nowrap">{dateStr}</td>
-                      <td className="px-4 py-3.5">
-                        <div className="font-semibold text-neutral-900">{custName}</div>
-                        <div className="text-[11px] text-neutral-400">{phone}</div>
+                      <td className="px-4 py-3.5 max-w-[160px]">
+                        <div className="font-semibold text-neutral-900 truncate">{custName}</div>
+                        <div className="text-[11px] text-neutral-400 truncate">{phone}</div>
                       </td>
-                      <td className="px-4 py-3.5 text-neutral-600">{city}</td>
-                      <td className="px-4 py-3.5 text-center text-neutral-700 font-medium">
+                      <td className="px-4 py-3.5 text-neutral-600 max-w-[140px] truncate">{city}</td>
+                      <td className="px-4 py-3.5 text-center text-neutral-700 font-medium whitespace-nowrap">
                         <span className="inline-block px-2 py-0.5 bg-neutral-100 rounded-md font-mono text-[11px]">
                           {itemsCount}
                         </span>
