@@ -1,0 +1,199 @@
+"use client";
+
+import React, { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import {
+  Search,
+  Building2,
+  Bell,
+  Plus,
+  LogOut,
+  ExternalLink,
+} from "lucide-react";
+import { useAdminAuth } from "@/context/AdminAuthContext";
+
+export function AdminHeader() {
+  const { user, logout } = useAdminAuth();
+  const [gatewayOnline, setGatewayOnline] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const checkGateway = async () => {
+      try {
+        const res = await fetch("http://localhost/api/v1/health", {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (isMounted) {
+          setGatewayOnline(res.ok);
+        }
+      } catch {
+        if (isMounted) {
+          setGatewayOnline(false);
+        }
+      }
+    };
+
+    checkGateway();
+    const interval = setInterval(checkGateway, 30000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  return (
+    <header className="h-20 bg-white border-b border-neutral-200/70 px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-20">
+      {/* Left side: Brand Identity & Global Search */}
+      <div className="flex items-center gap-3 sm:gap-6 flex-1 min-w-0 mr-2 sm:mr-4">
+        {/* Brand Logomark */}
+        <Link
+          href="/"
+          className="flex items-center gap-2.5 shrink-0 group cursor-pointer"
+        >
+          <div
+            className="h-9 w-9 rounded-xl bg-neutral-100/90 border border-neutral-200/90 flex items-center justify-center p-1 shadow-2xs group-hover:bg-neutral-100 group-hover:border-neutral-300 transition-all shrink-0"
+            title="Clothes EC Admin Operations"
+          >
+            <Image
+              src="/images/logoDevs.png"
+              alt="Clothes EC Logo"
+              width={28}
+              height={24}
+              className="h-6 w-auto object-contain group-hover:scale-105 transition-transform"
+              priority
+            />
+          </div>
+          <div className="hidden sm:block min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="font-bold text-sm tracking-tight text-neutral-900 group-hover:text-[#944434] transition-colors">
+                CLOTHES EC
+              </span>
+              <span className="px-1.5 py-0.2 text-[9px] font-bold text-[#944434] bg-[#944434]/10 rounded border border-[#944434]/20 uppercase">
+                Admin
+              </span>
+            </div>
+            <p className="text-[10px] text-neutral-400 font-medium tracking-wide">
+              Store Operations
+            </p>
+          </div>
+        </Link>
+
+        {/* Storefront External Shortcut */}
+        <a
+          href={process.env.NEXT_PUBLIC_STORE_URL || "http://localhost:3000"}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-neutral-500 hover:text-neutral-900 bg-neutral-100 hover:bg-neutral-200/70 rounded-lg transition-colors"
+          title="Open live customer storefront in new tab"
+        >
+          <span>Storefront</span>
+          <ExternalLink className="w-3 h-3 text-neutral-400" />
+        </a>
+
+        {/* Global Search Bar with ⌘K badge */}
+        <div className="relative w-full max-w-[340px] min-w-0">
+          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-neutral-400">
+            <Search className="w-4 h-4" />
+          </div>
+          <input
+            ref={searchInputRef}
+            type="text"
+            placeholder="Search orders, SKU, courier or products..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full pl-10 pr-14 py-2 text-xs bg-neutral-50/80 hover:bg-neutral-50 focus:bg-white text-neutral-800 placeholder-neutral-400 border border-neutral-200/80 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-[#944434]/20 focus:border-[#944434] transition-all"
+          />
+          <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+            <kbd
+              onClick={() => searchInputRef.current?.focus()}
+              className="px-1.5 py-0.5 text-[10px] font-semibold text-neutral-400 hover:text-neutral-700 bg-white border border-neutral-200 rounded shadow-2xs cursor-pointer select-none transition-colors"
+              title="Press ⌘K or Ctrl+K to search"
+            >
+              ⌘K
+            </kbd>
+          </div>
+        </div>
+      </div>
+
+      {/* Right side: Realtime status, Hub location, Notification & Actions */}
+      <div className="flex items-center gap-2 sm:gap-3.5 shrink-0">
+        {/* Realtime Gateway Status Pill */}
+        <div className="hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FDF2F0] border border-[#FADAD6] text-[11px] font-medium text-[#944434]">
+          <span className="relative flex h-2 w-2">
+            <span
+              className={`absolute inline-flex h-full w-full rounded-full opacity-75 ${
+                gatewayOnline ? "animate-ping bg-[#E05238]" : "bg-amber-500"
+              }`}
+            />
+            <span
+              className={`relative inline-flex rounded-full h-2 w-2 ${
+                gatewayOnline ? "bg-[#E05238]" : "bg-amber-500"
+              }`}
+            />
+          </span>
+          <span className="whitespace-nowrap font-sans">
+            {gatewayOnline ? "Gateway (Port 80): Connected" : "Gateway Offline"}
+          </span>
+        </div>
+
+        {/* Store Hub Location Pill */}
+        <div className="hidden xl:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-neutral-100/80 border border-neutral-200/80 text-[11px] font-medium text-neutral-700">
+          <Building2 className="w-3.5 h-3.5 text-neutral-500" />
+          <span className="whitespace-nowrap">Phnom Penh Flagship Hub</span>
+        </div>
+
+        {/* Notification Bell */}
+        <button
+          type="button"
+          className="relative p-2 rounded-xl text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 transition-colors cursor-pointer"
+          aria-label="View notifications"
+        >
+          <Bell className="w-5 h-5" />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white" />
+        </button>
+
+        {/* Primary Action: + ADD PRODUCT */}
+        <Link
+          href="/products/new"
+          className="inline-flex items-center gap-1.5 px-2.5 sm:px-4 py-2 text-xs font-semibold text-white bg-[#0E0E12] hover:bg-neutral-800 rounded-xl shadow-xs transition-all cursor-pointer"
+        >
+          <Plus className="w-3.5 h-3.5" />
+          <span className="tracking-wide uppercase text-[11px] whitespace-nowrap hidden sm:inline">
+            Add Product
+          </span>
+        </Link>
+
+        {/* User initials & Sign Out */}
+        <div className="hidden sm:flex items-center gap-2 pl-1 border-l border-neutral-200">
+          <div className="w-8 h-8 rounded-xl bg-neutral-100 border border-neutral-200 text-neutral-700 font-bold text-xs flex items-center justify-center uppercase">
+            {user?.first_name ? user.first_name[0] : user?.username?.[0] || "A"}
+          </div>
+          <button
+            type="button"
+            onClick={logout}
+            title="Sign Out"
+            className="p-1.5 text-neutral-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+            aria-label="Sign out"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+}

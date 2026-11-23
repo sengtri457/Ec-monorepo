@@ -10,10 +10,20 @@ from apps.orders.views import (
     OrderDetailDeliveryView,
     RiderLocationUpdateView,
     InternalShipmentStatusUpdateView,
+    AdminOrderListView,
+    AdminOrderDetailView,
+    AdminOrderStatusUpdateView,
+    AdminDashboardStatsView,
 )
 
 urlpatterns = [
     path('health/', HealthCheckView.as_view(), name='health-check'),
+    # Admin Order routes
+    path('api/v1/orders/admin/', AdminOrderListView.as_view(), name='admin-order-list'),
+    path('api/v1/orders/admin/stats/', AdminDashboardStatsView.as_view(), name='admin-dashboard-stats'),
+    path('api/v1/orders/admin/<str:order_number>/', AdminOrderDetailView.as_view(), name='admin-order-detail'),
+    path('api/v1/orders/admin/<str:order_number>/status/', AdminOrderStatusUpdateView.as_view(), name='admin-order-status-update'),
+
     path('api/v1/orders/shipping-methods/', ShippingMethodListView.as_view(), name='shipping-methods'),
     path('api/v1/orders/checkout/', CheckoutView.as_view(), name='order-checkout'),
     path('api/v1/orders/', OrderListView.as_view(), name='order-list'),

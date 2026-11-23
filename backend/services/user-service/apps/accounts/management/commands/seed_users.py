@@ -6,6 +6,24 @@ User = get_user_model()
 
 DEMO_ACCOUNTS = [
     {
+        "email": "admin@clothes.ec",
+        "username": "admin",
+        "first_name": "System",
+        "last_name": "Admin",
+        "phone": "012000111",
+        "telegram": "@clothes_admin",
+        "password": "AdminPassword123!",
+        "is_staff": True,
+        "is_superuser": True,
+        "address": {
+            "city_province": "Phnom Penh",
+            "khan_district": "Daun Penh",
+            "sangkat_commune": "Phsar Thmey I",
+            "street_address": "Central Office, Norodom Blvd",
+            "landmark": "Near Central Market",
+        }
+    },
+    {
         "email": "sophea.chan@gmail.com",
         "username": "sophea_chan",
         "first_name": "Sophea",
@@ -57,6 +75,10 @@ class Command(BaseCommand):
                     "telegram": data["telegram"],
                 }
             )
+            is_staff = data.get("is_staff", False)
+            is_superuser = data.get("is_superuser", False)
+            user.is_staff = is_staff
+            user.is_superuser = is_superuser
             user.set_password(password)
             user.save()
 

@@ -81,7 +81,10 @@ DB_PASSWORD = os.environ.get('DB_PASSWORD', '')
 DB_HOST = os.environ.get('DB_HOST', '')
 DB_PORT = os.environ.get('DB_PORT', '5432')
 
-if DB_ENGINE == 'django.db.backends.postgresql' or (DB_HOST and DB_USER):
+import sys
+is_test = 'test' in sys.argv or 'pytest' in sys.modules or os.environ.get('TESTING') == 'True'
+
+if not is_test and (DB_ENGINE == 'django.db.backends.postgresql' or (DB_HOST and DB_USER)):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',

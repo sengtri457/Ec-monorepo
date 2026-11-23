@@ -6,8 +6,10 @@
   "scripts": {
     "dev": "turbo run dev",
     "dev:web": "pnpm --filter web dev",
+    "dev:admin": "pnpm --filter admin dev",
     "build": "turbo run build",
     "build:web": "pnpm --filter web build",
+    "build:admin": "pnpm --filter admin build",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "clean": "turbo run clean",
@@ -15,7 +17,8 @@
     "docker:down": "docker compose -f infrastructure/docker/docker-compose.yml down",
     "docker:logs": "docker compose -f infrastructure/docker/docker-compose.yml logs -f",
     "docker:ps": "docker compose -f infrastructure/docker/docker-compose.yml ps",
-    "services:test": "python test_live_gateway.py"
+    "services:test": "python test_live_gateway.py",
+    "admin:verify": "python scripts/verify_admin_pipeline.py"
   },
   "devDependencies": {
     "turbo": "^2.11.13"

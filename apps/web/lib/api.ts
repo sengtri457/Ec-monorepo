@@ -501,3 +501,5 @@ export async function updateRiderLocation(
   }
 }
 
+export default fetchDeliveryTracking;
+

@@ -11,6 +11,8 @@ def generate_tokens_for_user(user):
         'user_id': user.id,
         'email': user.email,
         'username': user.username,
+        'is_staff': user.is_staff,
+        'is_superuser': user.is_superuser,
         'token_type': 'access',
         'iat': now,
         'exp': now + datetime.timedelta(hours=getattr(settings, 'JWT_EXPIRATION_HOURS', 24)),
