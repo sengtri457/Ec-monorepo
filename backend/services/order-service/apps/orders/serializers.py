@@ -135,3 +135,38 @@ class DeliveryShipmentSerializer(serializers.ModelSerializer):
             'updated_at',
         ]
 
+class AdminOrderListSerializer(serializers.ModelSerializer):
+    items_count = serializers.IntegerField(source='items.count', read_only=True)
+    shipping_method_name = serializers.CharField(source='shipping_method.name', read_only=True)
+
+    class Meta:
+        model = Order
+        fields = [
+            'id',
+            'order_number',
+            'customer_name',
+            'customer_email',
+            'customer_phone',
+            'city_province',
+            'total_usd',
+            'total_khr',
+            'status',
+            'payment_status',
+            'shipping_method_name',
+            'items_count',
+            'created_at',
+        ]
+
+class OrderStatusHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderStatusHistory
+        fields = ['id', 'from_status', 'to_status', 'changed_by_user_id', 'notes', 'created_at']
+
+class AdminOrderDetailSerializer(OrderSerializer):
+    shipment = DeliveryShipmentSerializer(read_only=True)
+    status_history = OrderStatusHistorySerializer(many=True, read_only=True)
+
+    class Meta(OrderSerializer.Meta):
+        fields = OrderSerializer.Meta.fields + ['shipment', 'status_history', 'updated_at']
+
+

@@ -17,7 +17,10 @@ from apps.orders.serializers import (
     CheckoutInputSerializer,
     OrderStatusUpdateSerializer,
     DeliveryShipmentSerializer,
+    AdminOrderListSerializer,
+    AdminOrderDetailSerializer,
 )
+from apps.core.admin_permissions import IsAdminOrStaffUser
 from apps.orders.services import CheckoutService
 from apps.orders.client import ProductServiceClient, NotificationServiceClient
 from apps.cart.views import get_or_create_cart, get_current_user_id
@@ -322,4 +325,111 @@ class InternalShipmentStatusUpdateView(APIView):
         )
 
         return Response(DeliveryShipmentSerializer(shipment).data, status=status.HTTP_200_OK)
+
+class AdminOrderListView(APIView):
+    permission_classes = [IsAdminOrStaffUser]
+
+    def get(self, request):
+        qs = Order.objects.select_related('shipping_method').prefetch_related('items').all().order_by('-created_at')
+
+        # Filters
+        order_status = request.query_params.get('status')
+        if order_status and order_status.upper() != 'ALL':
+            qs = qs.filter(status=order_status.upper())
+
+        payment_status = request.query_params.get('payment_status')
+        if payment_status and payment_status.upper() != 'ALL':
+            qs = qs.filter(payment_status=payment_status.upper())
+
+        search = request.query_params.get('search')
+        if search:
+            search = search.strip()
+            qs = qs.filter(
+                Q(order_number__icontains=search) |
+                Q(customer_name__icontains=search) |
+                Q(customer_phone__icontains=search) |
+                Q(customer_email__icontains=search)
+            )
+
+        limit = min(int(request.query_params.get('limit', 50)), 200)
+        offset = int(request.query_params.get('offset', 0))
+        total_count = qs.count()
+
+        serializer = AdminOrderListSerializer(qs[offset:offset+limit], many=True)
+        return Response({
+            "count": total_count,
+            "results": serializer.data
+        }, status=status.HTTP_200_OK)
+
+class AdminOrderDetailView(APIView):
+    permission_classes = [IsAdminOrStaffUser]
+
+    def get(self, request, order_number):
+        try:
+            order = Order.objects.select_related('shipping_method').prefetch_related('items', 'status_history').get(order_number=order_number)
+        except Order.DoesNotExist:
+            return Response({"error": "Order not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = AdminOrderDetailSerializer(order)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class AdminOrderStatusUpdateView(APIView):
+    permission_classes = [IsAdminOrStaffUser]
+
+    def patch(self, request, order_number):
+        try:
+            order = Order.objects.get(order_number=order_number)
+        except Order.DoesNotExist:
+            return Response({"error": "Order not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = OrderStatusUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        old_status = order.status
+        old_payment = order.payment_status
+
+        if 'status' in data:
+            order.status = data['status']
+        if 'payment_status' in data:
+            order.payment_status = data['payment_status']
+
+        order.save(update_fields=['status', 'payment_status', 'updated_at'])
+
+        if ('status' in data and data['status'] != old_status) or ('payment_status' in data and data['payment_status'] != old_payment):
+            OrderStatusHistory.objects.create(
+                order=order,
+                from_status=old_status,
+                to_status=order.status,
+                changed_by_user_id=getattr(request, 'admin_user_id', None),
+                notes=data.get('notes', 'Admin dashboard status update')
+            )
+
+        if order.payment_status == 'PAID' and old_payment != 'PAID':
+            from apps.orders.fulfillment import FulfillmentService
+            FulfillmentService.create_shipment_for_order(order)
+
+        order.refresh_from_db()
+        return Response(AdminOrderDetailSerializer(order).data, status=status.HTTP_200_OK)
+
+class AdminDashboardStatsView(APIView):
+    permission_classes = [IsAdminOrStaffUser]
+
+    def get(self, request):
+        from django.db.models import Sum
+        total_revenue = Order.objects.filter(payment_status='PAID').aggregate(Sum('total_usd'))['total_usd__sum'] or 0
+        total_orders = Order.objects.count()
+        pending_fulfillment = Order.objects.filter(status__in=['CONFIRMED', 'PROCESSING']).count()
+        dispatched_count = Order.objects.filter(status='SHIPPED').count()
+
+        recent_orders = Order.objects.select_related('shipping_method').order_by('-created_at')[:10]
+
+        return Response({
+            "total_revenue": float(total_revenue),
+            "total_orders": total_orders,
+            "pending_fulfillment_count": pending_fulfillment,
+            "dispatched_count": dispatched_count,
+            "recent_orders": AdminOrderListSerializer(recent_orders, many=True).data
+        }, status=status.HTTP_200_OK)
+
 
