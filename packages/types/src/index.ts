@@ -211,70 +211,106 @@ export type StockMovementType =
 export type StockMovement = {
   id: number;
   variantId?: number;
+  variant_id?: number;
   sku: string;
   productTitle?: string;
-  quantityChange: number;
-  movementType: StockMovementType;
+  product_title?: string;
+  quantityChange?: number;
+  quantity_change?: number;
+  movementType?: StockMovementType;
+  movement_type?: StockMovementType;
   referenceId?: string;
-  balanceAfter: number;
+  reference_id?: string;
+  balanceAfter?: number;
+  balance_after?: number;
   notes?: string;
-  createdAt: string;
+  createdAt?: string;
+  created_at?: string;
 };
 
 export type AdminInventoryItem = {
   id: number;
-  productId: number;
-  productTitle: string;
+  productId?: number;
+  product_id?: number;
+  productTitle?: string;
+  product_title?: string;
   categoryName?: string;
+  category_name?: string;
   department?: string;
   sku: string;
   size?: string;
   color?: string;
   colorHex?: string;
+  color_hex?: string;
   stock: number;
-  effectivePrice: number;
+  effectivePrice?: number;
+  effective_price?: number;
   thumbnail?: string;
-  isActive: boolean;
-  lowStock: boolean;
+  isActive?: boolean;
+  is_active?: boolean;
+  lowStock?: boolean;
+  low_stock?: boolean;
 };
 
 export type AdminOrderSummary = {
   id: string;
-  orderNumber: string;
-  customerName: string;
-  customerEmail: string;
-  customerPhone: string;
-  cityProvince: string;
-  totalUsd: number;
+  orderNumber?: string;
+  order_number?: string;
+  customerName?: string;
+  customer_name?: string;
+  customerEmail?: string;
+  customer_email?: string;
+  customerPhone?: string;
+  customer_phone?: string;
+  cityProvince?: string;
+  city_province?: string;
+  totalUsd?: number;
+  total_usd?: number;
   totalKhr?: number;
+  total_khr?: number;
   status: string;
-  paymentStatus: string;
-  shippingMethodName: string;
-  itemsCount: number;
-  createdAt: string;
+  paymentStatus?: string;
+  payment_status?: string;
+  shippingMethodName?: string;
+  shipping_method_name?: string;
+  itemsCount?: number;
+  items_count?: number;
+  createdAt?: string;
+  created_at?: string;
 };
 
 export type AdminOrderStatusHistory = {
   id: number;
-  fromStatus: string;
-  toStatus: string;
+  fromStatus?: string;
+  from_status?: string;
+  toStatus?: string;
+  to_status?: string;
   changedByUserId?: number | null;
+  changed_by_user_id?: number | null;
   notes?: string;
-  createdAt: string;
+  createdAt?: string;
+  created_at?: string;
 };
 
 export type AdminOrderDetail = Order & {
   statusHistory?: AdminOrderStatusHistory[];
+  status_history?: AdminOrderStatusHistory[];
   shipment?: DeliveryShipment;
   updatedAt?: string;
+  updated_at?: string;
 };
 
 export type AdminDashboardStats = {
-  totalRevenue: number;
-  totalOrders: number;
-  pendingFulfillmentCount: number;
-  dispatchedCount: number;
-  recentOrders: AdminOrderSummary[];
+  totalRevenue?: number;
+  total_revenue?: number;
+  totalOrders?: number;
+  total_orders?: number;
+  pendingFulfillmentCount?: number;
+  pending_fulfillment_count?: number;
+  dispatchedCount?: number;
+  dispatched_count?: number;
+  recentOrders?: AdminOrderSummary[];
+  recent_orders?: AdminOrderSummary[];
 };
 
 export type ProductUpsertInput = {

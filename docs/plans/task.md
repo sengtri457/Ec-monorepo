@@ -8,9 +8,9 @@
 | Task 6 | Shared Admin Domain Types in `@ec/types` | Complete |
 | Task 7 | Initialize `apps/admin` Project (Next.js 16 App Router) | Complete |
 | Task 8 | Admin API Client & Auth Guard in `apps/admin` | Complete |
-| Task 9 | Responsive Admin Shell (Sidebar, Header & Navigation) | In Progress |
-| Task 10 | Overview Dashboard Page (`apps/admin/app/page.tsx`) | Not Started |
-| Task 11 | Inventory Management View & Quick Restock Modal (`/inventory`, `/inventory/movements`) | Not Started |
+| Task 9 | Responsive Admin Shell (Sidebar, Header & Navigation) | Complete |
+| Task 10 | Overview Dashboard Page (`apps/admin/app/page.tsx`) | Complete |
+| Task 11 | Inventory Management View & Quick Restock Modal (`/inventory`, `/inventory/movements`) | In Progress |
 | Task 12 | Admin Orders Queue & Status Workflow (`/orders`, `/orders/[orderNumber]`) | Not Started |
 | Task 13 | Product Catalog List & Product Upsert Form (`/products`, `/products/new`, `/products/[id]/edit`) | Not Started |
 | Task 14 | Automated End-to-End Verification & Test Suite (`verify_admin_pipeline.py`, `pnpm --filter admin build`) | Not Started |
