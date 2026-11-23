@@ -150,3 +150,53 @@ export type User = {
   telegram?: string;
   address?: UserAddress;
 };
+
+export type DeliveryStatus =
+  | "PENDING_DISPATCH"
+  | "PACKED"
+  | "PICKED_UP"
+  | "OUT_FOR_DELIVERY"
+  | "DELIVERED"
+  | "FAILED_ATTEMPT"
+  | "RETURNED";
+
+export type DeliveryTimelineEvent = {
+  id: number;
+  status: string;
+  title: string;
+  description: string;
+  location: string;
+  occurred_at: string;
+};
+
+export type DeliveryShipment = {
+  id: string;
+  orderNumber: string;
+  trackingNumber: string;
+  courierName: string;
+  courierPhone: string;
+  driverName?: string;
+  driverPhone?: string;
+  vehicleInfo?: string;
+  status: DeliveryStatus;
+  shippingMethodCode: string;
+  destinationCity: string;
+  destinationAddress: string;
+  recipientName: string;
+  recipientPhone: string;
+  originLat: number;
+  originLng: number;
+  destLat: number;
+  destLng: number;
+  currentLat?: number;
+  currentLng?: number;
+  heading?: number;
+  speed?: number;
+  estimatedDeliveryAt?: string;
+  dispatchedAt?: string;
+  deliveredAt?: string;
+  timeline: DeliveryTimelineEvent[];
+  createdAt: string;
+  updatedAt: string;
+};
+

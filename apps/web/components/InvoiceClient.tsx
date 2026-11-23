@@ -3,14 +3,15 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Order } from "@/types";
+import { Order, DeliveryShipment } from "@/types";
 import { getOrderById } from "@/lib/orders";
-import { fetchOrderDetail } from "@/lib/api";
+import { fetchOrderDetail, fetchDeliveryTracking } from "@/lib/api";
 import { downloadInvoice } from "@/lib/downloadInvoice";
 import { toKhr } from "@/lib/cambodiaLocations";
 import OrderStepper from "@/components/OrderStepper";
 import BakongKhqrCard from "@/components/BakongKhqrCard";
 import { buildBakongKhqr } from "@/lib/khqr";
+import DeliveryTrackingCard from "@/components/delivery/DeliveryTrackingCard";
 
 interface InvoiceClientProps {
   orderId: string;
@@ -19,6 +20,7 @@ interface InvoiceClientProps {
 
 export default function InvoiceClient({ orderId, token }: InvoiceClientProps) {
   const [order, setOrder] = useState<Order | null>(null);
+  const [shipment, setShipment] = useState<DeliveryShipment | null>(null);
   const [isLoading, setIsLoading] = useState(() => Boolean(orderId));
 
   useEffect(() => {
@@ -42,6 +44,17 @@ export default function InvoiceClient({ orderId, token }: InvoiceClientProps) {
         if (remoteOrder && isMounted) {
           setOrder(remoteOrder);
           setIsLoading(false);
+
+          if (remoteOrder.trackingNumber) {
+            try {
+              const liveShipment = await fetchDeliveryTracking(remoteOrder.trackingNumber);
+              if (liveShipment && isMounted) {
+                setShipment(liveShipment);
+              }
+            } catch {
+              // Ignore tracking fetch failure
+            }
+          }
           return;
         }
       } catch {
@@ -196,6 +209,13 @@ export default function InvoiceClient({ orderId, token }: InvoiceClientProps) {
           </button>
         </div>
       </div>
+
+      {/* Live Delivery & Fulfillment Tracking Card (Hidden on Print) */}
+      {shipment && (
+        <div className="no-print">
+          <DeliveryTrackingCard initialShipment={shipment} />
+        </div>
+      )}
 
       {/* ISOLATED PRINTABLE INVOICE CARD (Only this card prints!) */}
       <div className="printable-invoice-card border border-border bg-paper shadow-sm overflow-hidden">

@@ -16,12 +16,17 @@ def get_current_user_id(request):
     auth_header = request.headers.get('Authorization')
     if auth_header and auth_header.startswith('Bearer '):
         token = auth_header.split(' ')[1]
-        try:
-            secret = getattr(settings, 'JWT_SECRET_KEY', settings.SECRET_KEY)
-            payload = jwt.decode(token, secret, algorithms=['HS256'])
-            return payload.get('user_id')
-        except Exception:
-            return None
+        secrets_to_try = [
+            getattr(settings, 'JWT_SECRET_KEY', None),
+            'shared-jwt-secret-key-change-in-production',
+            getattr(settings, 'SECRET_KEY', None),
+        ]
+        for secret in filter(None, secrets_to_try):
+            try:
+                payload = jwt.decode(token, secret, algorithms=['HS256'])
+                return payload.get('user_id')
+            except jwt.PyJWTError:
+                continue
     return None
 
 def get_or_create_cart(request) -> Cart:

@@ -1,5 +1,12 @@
 from rest_framework import serializers
-from apps.orders.models import Order, OrderItem, ShippingMethod, OrderStatusHistory
+from apps.orders.models import (
+    Order,
+    OrderItem,
+    ShippingMethod,
+    OrderStatusHistory,
+    DeliveryShipment,
+    DeliveryTimelineEvent,
+)
 
 class ShippingMethodSerializer(serializers.ModelSerializer):
     class Meta:
@@ -85,3 +92,46 @@ class OrderStatusUpdateSerializer(serializers.Serializer):
     payment_status = serializers.ChoiceField(choices=Order.PAYMENT_STATUS_CHOICES, required=False)
     notes = serializers.CharField(required=False, allow_blank=True, default='')
     changed_by_user_id = serializers.IntegerField(required=False, allow_null=True, default=None)
+
+class DeliveryTimelineEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DeliveryTimelineEvent
+        fields = ['id', 'status', 'title', 'description', 'location', 'occurred_at']
+
+class DeliveryShipmentSerializer(serializers.ModelSerializer):
+    timeline = DeliveryTimelineEventSerializer(many=True, read_only=True)
+    order_number = serializers.CharField(source='order.order_number', read_only=True)
+
+    class Meta:
+        model = DeliveryShipment
+        fields = [
+            'id',
+            'order_number',
+            'tracking_number',
+            'courier_name',
+            'courier_phone',
+            'driver_name',
+            'driver_phone',
+            'vehicle_info',
+            'status',
+            'shipping_method_code',
+            'destination_city',
+            'destination_address',
+            'recipient_name',
+            'recipient_phone',
+            'origin_lat',
+            'origin_lng',
+            'dest_lat',
+            'dest_lng',
+            'current_lat',
+            'current_lng',
+            'heading',
+            'speed',
+            'estimated_delivery_at',
+            'dispatched_at',
+            'delivered_at',
+            'timeline',
+            'created_at',
+            'updated_at',
+        ]
+
