@@ -190,11 +190,12 @@ class PublicDeliveryTrackingView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, tracking_number):
-        try:
-            shipment = DeliveryShipment.objects.prefetch_related('timeline').get(
-                tracking_number__iexact=tracking_number.strip()
-            )
-        except DeliveryShipment.DoesNotExist:
+        query_val = tracking_number.strip()
+        shipment = DeliveryShipment.objects.prefetch_related('timeline').filter(
+            Q(tracking_number__iexact=query_val) | Q(order__order_number__iexact=query_val)
+        ).first()
+
+        if not shipment:
             return Response(
                 {"error": {"code": "NOT_FOUND", "message": f"Tracking number '{tracking_number}' not found."}},
                 status=status.HTTP_404_NOT_FOUND
