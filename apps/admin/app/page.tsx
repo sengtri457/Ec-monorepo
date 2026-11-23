@@ -15,6 +15,7 @@ import {
 import { adminApiClient } from "@/lib/adminApiClient";
 import { AdminDashboardStats, AdminInventoryItem, AdminOrderSummary } from "@ec/types";
 import { StatCard } from "@/components/dashboard/StatCard";
+import { SalesTrajectoryChart } from "@/components/dashboard/SalesTrajectoryChart";
 
 export default function AdminOverviewPage() {
   const [stats, setStats] = useState<AdminDashboardStats | null>(null);
@@ -169,7 +170,7 @@ export default function AdminOverviewPage() {
         </div>
 
         {/* Hero Content Row */}
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-8">
+        <div className="relative z-10 flex flex-col xl:flex-row xl:items-center justify-between gap-6 xl:gap-8">
           {/* Left Column: Heading & Description */}
           <div className="max-w-2xl">
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-white">
@@ -181,7 +182,7 @@ export default function AdminOverviewPage() {
           </div>
 
           {/* Right Column: Net Revenue Snapshot (Glass Card) */}
-          <div className="w-full sm:w-64 bg-white/[0.04] backdrop-blur-md border border-white/10 rounded-2xl p-5 sm:p-6 shrink-0 self-start lg:self-center shadow-inner">
+          <div className="w-full sm:w-72 xl:w-80 bg-white/[0.04] backdrop-blur-md border border-white/10 rounded-2xl p-5 sm:p-6 shrink-0 self-start xl:self-center shadow-inner">
             <p className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
               Total Revenue (MTD)
             </p>
@@ -247,10 +248,13 @@ export default function AdminOverviewPage() {
         />
       </div>
 
+      {/* Sales & Demand Trajectory Analytics Chart */}
+      <SalesTrajectoryChart />
+
       {/* Main Grid: Recent Orders Feed & Critical Stock Watchlist */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Recent Orders Queue (2 Columns) */}
-        <div className="rounded-2xl border border-neutral-200/80 bg-white shadow-xs lg:col-span-2 overflow-hidden">
+        <div className="rounded-2xl border border-neutral-200/80 bg-white shadow-xs lg:col-span-2 min-w-0 overflow-hidden">
           <div className="flex items-center justify-between border-b border-neutral-200/70 px-6 py-4 bg-neutral-50/40">
             <div>
               <h2 className="text-sm font-bold text-neutral-900">Recent Customer Orders</h2>
@@ -266,7 +270,7 @@ export default function AdminOverviewPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left text-xs min-w-[640px]">
               <thead className="border-b border-neutral-200/70 bg-neutral-50 text-[11px] font-semibold uppercase tracking-wider text-neutral-500">
                 <tr>
                   <th className="px-6 py-3.5">Order #</th>
@@ -339,7 +343,7 @@ export default function AdminOverviewPage() {
         </div>
 
         {/* Low Stock Watchlist (1 Column) */}
-        <div className="rounded-2xl border border-neutral-200/80 bg-white shadow-xs overflow-hidden flex flex-col justify-between">
+        <div className="rounded-2xl border border-neutral-200/80 bg-white shadow-xs min-w-0 overflow-hidden flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between border-b border-neutral-200/70 px-6 py-4 bg-neutral-50/40">
               <div>

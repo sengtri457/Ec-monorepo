@@ -1,10 +1,8 @@
 | Task | Description | Status |
 | :--- | :--- | :--- |
-| Task 1 | Design Tokens, Color Palette & Custom Scrollbars (`globals.css`) | Complete |
-| Task 2 | Collapsible Obsidian Admin Sidebar (`AdminSidebar.tsx`, `AdminShell.tsx`) | Complete |
-| Task 3 | Refined Top Header with Search & Hub Pills (`AdminHeader.tsx`) | Complete |
-| Task 4 | Operations Overview Dashboard Hero & KPI Cards (`app/page.tsx`, `StatCard.tsx`) | Complete |
-| Task 5 | Orders Queue & Slide-Over Inspector Drawer (`/orders`, `OrderDrawer.tsx`) | Complete |
-| Task 6 | Variant Stock Matrix with Inline Cell Editing (`VariantStockMatrix.tsx`, `/inventory`) | Complete |
-| Task 7 | Live Dispatch & Fleet Telemetry Map (`/dispatch`, `CourierTelemetryDrawer.tsx`) | Complete |
-| Task 8 | End-to-End Automated Verification Suite (Lint, Build, Pipeline) | Complete |
+| Task 1 | Interactive Sales Trajectory Chart Component (`SalesTrajectoryChart.tsx`) | Complete |
+| Task 2 | Overview Dashboard Integration & Hero Layout Calibration (`app/page.tsx`) | Complete |
+| Task 3 | Table & Container Overflow Hardening (`min-w-0`, truncation across tables) | In Progress |
+| Task 4 | Drawer & Modal Responsive Adaptability (Mobile Bottom Sheets & Sizing) | Not Started |
+| Task 5 | Product Catalog Token & Navigation Normalization (`/products`, `ProductForm.tsx`) | Not Started |
+| Task 6 | Full Verification Suite (ESLint, Next.js Build, Pipeline & Compatibility) | Not Started |
