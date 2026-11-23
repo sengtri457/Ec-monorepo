@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Search,
   Building2,
@@ -65,10 +66,17 @@ export function AdminHeader() {
           className="flex items-center gap-2.5 shrink-0 group cursor-pointer"
         >
           <div
-            className="w-9 h-9 rounded-xl bg-[#0E0E12] border border-neutral-700/80 text-white font-bold flex items-center justify-center text-xs tracking-widest shadow-sm group-hover:bg-[#944434] transition-colors"
+            className="h-9 w-9 rounded-xl bg-neutral-100/90 border border-neutral-200/90 flex items-center justify-center p-1 shadow-2xs group-hover:bg-neutral-100 group-hover:border-neutral-300 transition-all shrink-0"
             title="Clothes EC Admin Operations"
           >
-            EC
+            <Image
+              src="/images/logoDevs.png"
+              alt="Clothes EC Logo"
+              width={28}
+              height={24}
+              className="h-6 w-auto object-contain group-hover:scale-105 transition-transform"
+              priority
+            />
           </div>
           <div className="hidden sm:block min-w-0">
             <div className="flex items-center gap-1.5">
