@@ -29,7 +29,17 @@ class TestNotificationService:
             "subject": "Order Confirmed",
             "message": "Your order has been paid and confirmed!"
         }
-        res = api_client.post('/internal/notifications/', payload, format='json')
+        # 1. Unauthenticated request without X-Internal-Service-Key is rejected
+        unauth_res = api_client.post('/internal/notifications/', payload, format='json')
+        assert unauth_res.status_code == status.HTTP_403_FORBIDDEN
+
+        # 2. Authenticated internal request succeeds
+        res = api_client.post(
+            '/internal/notifications/',
+            payload,
+            format='json',
+            HTTP_X_INTERNAL_SERVICE_KEY='ec-internal-shared-secret-key-2026'
+        )
         assert res.status_code == status.HTTP_201_CREATED
         data = res.json()
         assert data['recipient'] == "@customer_telegram"

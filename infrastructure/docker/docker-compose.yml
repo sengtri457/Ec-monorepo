@@ -82,6 +82,9 @@ services:
       - DB_HOST=postgres
       - DB_PORT=5432
       - INTERNAL_SERVICE_KEY=${INTERNAL_SERVICE_KEY:-ec-internal-shared-secret-key-2026}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-shared-jwt-secret-key-change-in-production}
+    volumes:
+      - ../../backend/services/product-service:/app
     ports:
       - "8002:8000"
     depends_on:
@@ -118,6 +121,8 @@ services:
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-shared-jwt-secret-key-change-in-production}
       - INTERNAL_SERVICE_KEY=${INTERNAL_SERVICE_KEY:-ec-internal-shared-secret-key-2026}
       - DEFAULT_TAX_RATE=${DEFAULT_TAX_RATE:-0.10}
+    volumes:
+      - ../../backend/services/order-service:/app
     ports:
       - "8003:8000"
     depends_on:

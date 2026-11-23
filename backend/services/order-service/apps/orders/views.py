@@ -4,13 +4,23 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db import connection
 from django.utils import timezone
-from apps.orders.models import Order, ShippingMethod, OrderStatusHistory
+from apps.orders.models import (
+    Order,
+    ShippingMethod,
+    OrderStatusHistory,
+    DeliveryShipment,
+    DeliveryTimelineEvent,
+)
 from apps.orders.serializers import (
     OrderSerializer,
     ShippingMethodSerializer,
     CheckoutInputSerializer,
     OrderStatusUpdateSerializer,
+    DeliveryShipmentSerializer,
+    AdminOrderListSerializer,
+    AdminOrderDetailSerializer,
 )
+from apps.core.admin_permissions import IsAdminOrStaffUser
 from apps.orders.services import CheckoutService
 from apps.orders.client import ProductServiceClient, NotificationServiceClient
 from apps.cart.views import get_or_create_cart, get_current_user_id
@@ -82,6 +92,12 @@ class CheckoutView(APIView):
             cart=cart,
             skip_reservation=skip_reservation
         )
+
+        pay_method = customer_data.get('payment_method', 'KHQR').upper()
+        if pay_method == 'COD':
+            from apps.orders.fulfillment import FulfillmentService
+            FulfillmentService.create_shipment_for_order(order)
+            order.refresh_from_db()
 
         response_data = {
             'order': OrderSerializer(order).data,
@@ -161,10 +177,259 @@ class InternalOrderStatusUpdateView(APIView):
                 notes=data.get('notes', 'Internal service status update')
             )
 
-        # On successful payment, confirm stock deduction and dispatch customer notification
+        # On successful payment, confirm stock deduction, provision delivery shipment, and dispatch customer notification
         if order.payment_status == 'PAID' and old_payment_status != 'PAID':
             if order.stock_reservation_id:
                 ProductServiceClient.confirm_stock(str(order.stock_reservation_id))
+            
+            from apps.orders.fulfillment import FulfillmentService
+            FulfillmentService.create_shipment_for_order(order)
+
             NotificationServiceClient.send_order_confirmation(order)
 
         return Response(OrderSerializer(order).data, status=status.HTTP_200_OK)
+
+class PublicDeliveryTrackingView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, tracking_number):
+        query_val = tracking_number.strip()
+        shipment = DeliveryShipment.objects.prefetch_related('timeline').filter(
+            Q(tracking_number__iexact=query_val) | Q(order__order_number__iexact=query_val)
+        ).first()
+
+        if not shipment:
+            return Response(
+                {"error": {"code": "NOT_FOUND", "message": f"Tracking number '{tracking_number}' not found."}},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = DeliveryShipmentSerializer(shipment)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class OrderDetailDeliveryView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, order_number):
+        try:
+            order = Order.objects.get(order_number=order_number)
+        except Order.DoesNotExist:
+            return Response(
+                {"error": {"code": "NOT_FOUND", "message": "Order not found."}},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        user_id = get_current_user_id(request)
+        token = request.headers.get('X-Order-Token') or request.query_params.get('token')
+        if not (user_id and order.user_id == user_id) and token != order.guest_access_token:
+            return Response(
+                {"error": {"code": "FORBIDDEN", "message": "Access denied to order delivery information."}},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        try:
+            shipment = order.shipment
+        except DeliveryShipment.DoesNotExist:
+            return Response(
+                {"error": {"code": "NOT_DISPATCHED", "message": "Fulfillment not yet created for this order."}},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        return Response(DeliveryShipmentSerializer(shipment).data, status=status.HTTP_200_OK)
+
+class RiderLocationUpdateView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def patch(self, request, tracking_number):
+        try:
+            shipment = DeliveryShipment.objects.get(tracking_number__iexact=tracking_number.strip())
+        except DeliveryShipment.DoesNotExist:
+            return Response(
+                {"error": {"code": "NOT_FOUND", "message": "Shipment not found."}},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        lat = request.data.get('latitude')
+        lng = request.data.get('longitude')
+        heading = request.data.get('heading')
+        speed = request.data.get('speed')
+
+        if lat is None or lng is None:
+            return Response({"error": "Latitude and longitude required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        shipment.current_lat = lat
+        shipment.current_lng = lng
+        if heading is not None:
+            shipment.heading = heading
+        if speed is not None:
+            shipment.speed = speed
+
+        # Transition status to OUT_FOR_DELIVERY if first live location ping
+        if shipment.status in ['PENDING_DISPATCH', 'PACKED', 'PICKED_UP']:
+            shipment.status = 'OUT_FOR_DELIVERY'
+            shipment.order.status = 'SHIPPED'
+            shipment.order.save(update_fields=['status', 'updated_at'])
+            DeliveryTimelineEvent.objects.create(
+                shipment=shipment,
+                status='OUT_FOR_DELIVERY',
+                title='Courier En Route with Live GPS',
+                description=f'Rider {shipment.driver_name} is navigating with live coordinates.',
+                location=shipment.destination_city
+            )
+
+        shipment.save(update_fields=['current_lat', 'current_lng', 'heading', 'speed', 'status', 'updated_at'])
+        return Response(DeliveryShipmentSerializer(shipment).data, status=status.HTTP_200_OK)
+
+class InternalShipmentStatusUpdateView(APIView):
+    permission_classes = [IsInternalService]
+
+    def patch(self, request, tracking_number):
+        try:
+            shipment = DeliveryShipment.objects.get(tracking_number__iexact=tracking_number.strip())
+        except DeliveryShipment.DoesNotExist:
+            return Response(
+                {"error": {"code": "NOT_FOUND", "message": "Shipment not found."}},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        new_status = request.data.get('status')
+        if not new_status or new_status not in dict(DeliveryShipment.STATUS_CHOICES):
+            return Response(
+                {"error": {"code": "INVALID_STATUS", "message": "Invalid shipment status."}},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        shipment.status = new_status
+        now = timezone.now()
+        if new_status == 'DELIVERED':
+            shipment.delivered_at = now
+            shipment.order.status = 'DELIVERED'
+            shipment.order.save(update_fields=['status', 'updated_at'])
+        elif new_status == 'OUT_FOR_DELIVERY':
+            shipment.order.status = 'SHIPPED'
+            shipment.order.save(update_fields=['status', 'updated_at'])
+
+        shipment.save(update_fields=['status', 'delivered_at', 'updated_at'])
+
+        title = request.data.get('title') or f"Status updated to {new_status}"
+        description = request.data.get('description', '')
+        location = request.data.get('location', '')
+
+        DeliveryTimelineEvent.objects.create(
+            shipment=shipment,
+            status=new_status,
+            title=title,
+            description=description,
+            location=location,
+            occurred_at=now
+        )
+
+        return Response(DeliveryShipmentSerializer(shipment).data, status=status.HTTP_200_OK)
+
+class AdminOrderListView(APIView):
+    permission_classes = [IsAdminOrStaffUser]
+
+    def get(self, request):
+        qs = Order.objects.select_related('shipping_method').prefetch_related('items').all().order_by('-created_at')
+
+        # Filters
+        order_status = request.query_params.get('status')
+        if order_status and order_status.upper() != 'ALL':
+            qs = qs.filter(status=order_status.upper())
+
+        payment_status = request.query_params.get('payment_status')
+        if payment_status and payment_status.upper() != 'ALL':
+            qs = qs.filter(payment_status=payment_status.upper())
+
+        search = request.query_params.get('search')
+        if search:
+            search = search.strip()
+            qs = qs.filter(
+                Q(order_number__icontains=search) |
+                Q(customer_name__icontains=search) |
+                Q(customer_phone__icontains=search) |
+                Q(customer_email__icontains=search)
+            )
+
+        limit = min(int(request.query_params.get('limit', 50)), 200)
+        offset = int(request.query_params.get('offset', 0))
+        total_count = qs.count()
+
+        serializer = AdminOrderListSerializer(qs[offset:offset+limit], many=True)
+        return Response({
+            "count": total_count,
+            "results": serializer.data
+        }, status=status.HTTP_200_OK)
+
+class AdminOrderDetailView(APIView):
+    permission_classes = [IsAdminOrStaffUser]
+
+    def get(self, request, order_number):
+        try:
+            order = Order.objects.select_related('shipping_method').prefetch_related('items', 'status_history').get(order_number=order_number)
+        except Order.DoesNotExist:
+            return Response({"error": "Order not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = AdminOrderDetailSerializer(order)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class AdminOrderStatusUpdateView(APIView):
+    permission_classes = [IsAdminOrStaffUser]
+
+    def patch(self, request, order_number):
+        try:
+            order = Order.objects.get(order_number=order_number)
+        except Order.DoesNotExist:
+            return Response({"error": "Order not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = OrderStatusUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        old_status = order.status
+        old_payment = order.payment_status
+
+        if 'status' in data:
+            order.status = data['status']
+        if 'payment_status' in data:
+            order.payment_status = data['payment_status']
+
+        order.save(update_fields=['status', 'payment_status', 'updated_at'])
+
+        if ('status' in data and data['status'] != old_status) or ('payment_status' in data and data['payment_status'] != old_payment):
+            OrderStatusHistory.objects.create(
+                order=order,
+                from_status=old_status,
+                to_status=order.status,
+                changed_by_user_id=getattr(request, 'admin_user_id', None),
+                notes=data.get('notes', 'Admin dashboard status update')
+            )
+
+        if order.payment_status == 'PAID' and old_payment != 'PAID':
+            from apps.orders.fulfillment import FulfillmentService
+            FulfillmentService.create_shipment_for_order(order)
+
+        order.refresh_from_db()
+        return Response(AdminOrderDetailSerializer(order).data, status=status.HTTP_200_OK)
+
+class AdminDashboardStatsView(APIView):
+    permission_classes = [IsAdminOrStaffUser]
+
+    def get(self, request):
+        from django.db.models import Sum
+        total_revenue = Order.objects.filter(payment_status='PAID').aggregate(Sum('total_usd'))['total_usd__sum'] or 0
+        total_orders = Order.objects.count()
+        pending_fulfillment = Order.objects.filter(status__in=['CONFIRMED', 'PROCESSING']).count()
+        dispatched_count = Order.objects.filter(status='SHIPPED').count()
+
+        recent_orders = Order.objects.select_related('shipping_method').order_by('-created_at')[:10]
+
+        return Response({
+            "total_revenue": float(total_revenue),
+            "total_orders": total_orders,
+            "pending_fulfillment_count": pending_fulfillment,
+            "dispatched_count": dispatched_count,
+            "recent_orders": AdminOrderListSerializer(recent_orders, many=True).data
+        }, status=status.HTTP_200_OK)
+
+

@@ -87,7 +87,6 @@ const DEMO_ORDERS: Order[] = [
 
 export default function OrderHistoryTab() {
   const [orders, setOrders] = useState<Order[]>([]);
-  const [trackingModalOrder, setTrackingModalOrder] = useState<Order | null>(null);
 
   useEffect(() => {
     const localOrders = getOrders();
@@ -303,18 +302,16 @@ export default function OrderHistoryTab() {
                 </div>
 
                 <div className="flex items-center gap-2.5">
-                  {order.trackingNumber && (
-                    <button
-                      onClick={() => setTrackingModalOrder(order)}
-                      className="border border-border bg-surface px-3 py-1.5 text-xs font-medium text-ink hover:border-ink hover:bg-paper transition-colors inline-flex items-center gap-1.5"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      <span>Track Delivery</span>
-                    </button>
-                  )}
+                  <Link
+                    href={`/tracking/${order.trackingNumber || order.id}`}
+                    className="border border-border bg-surface px-3 py-1.5 text-xs font-medium text-ink hover:border-ink hover:bg-paper transition-colors inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-ctrl-red" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>Track Delivery</span>
+                  </Link>
 
                   <Link
                     href={`/invoice/${order.id}`}
@@ -329,79 +326,6 @@ export default function OrderHistoryTab() {
               </div>
             </div>
           ))}
-        </div>
-      )}
-
-      {/* Tracking Modal */}
-      {trackingModalOrder && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/60 backdrop-blur-xs p-4">
-          <div className="w-full max-w-md border border-border bg-paper p-6 shadow-xl">
-            <div className="flex items-center justify-between border-b border-border pb-3 mb-4">
-              <h3 className="font-heading font-semibold text-sm text-ink">
-                Courier Tracking — {trackingModalOrder.trackingNumber}
-              </h3>
-              <button
-                onClick={() => setTrackingModalOrder(null)}
-                className="text-xs text-ink-soft hover:text-ink"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="space-y-4 text-xs">
-              <div className="border border-border bg-surface/50 p-3 space-y-1">
-                <p className="text-[11px] text-ink-soft">Destination Address:</p>
-                <p className="font-medium text-ink">
-                  {trackingModalOrder.customer.streetAddress || trackingModalOrder.customer.address}
-                </p>
-                <p className="text-ink-soft">
-                  {trackingModalOrder.customer.cityProvince}, Cambodia
-                </p>
-              </div>
-
-              {/* Progress Steps */}
-              <div className="space-y-3 pt-2">
-                <div className="flex items-start gap-3">
-                  <div className="h-5 w-5 rounded-full bg-sage text-paper flex items-center justify-center text-[10px] font-bold shrink-0">
-                    ✓
-                  </div>
-                  <div>
-                    <p className="font-medium text-ink">Order Confirmed & Packed</p>
-                    <p className="text-[11px] text-ink-soft">Warehouse dispatched parcel to local hub</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="h-5 w-5 rounded-full bg-ctrl-red text-paper flex items-center justify-center text-[10px] font-bold shrink-0 animate-pulse">
-                    🚚
-                  </div>
-                  <div>
-                    <p className="font-medium text-ink">Dispatched with Express Rider</p>
-                    <p className="text-[11px] text-ink-soft">Courier is on the way to your destination</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 opacity-60">
-                  <div className="h-5 w-5 rounded-full bg-surface border border-border text-ink-soft flex items-center justify-center text-[10px] shrink-0">
-                    3
-                  </div>
-                  <div>
-                    <p className="font-medium text-ink">Customer Receipt & Handover</p>
-                    <p className="text-[11px] text-ink-soft">Direct drop-off at designated landmark</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 pt-4 border-t border-border flex justify-end">
-              <button
-                onClick={() => setTrackingModalOrder(null)}
-                className="border border-ink bg-ink text-paper px-4 py-2 text-xs font-medium hover:bg-charcoal transition-colors"
-              >
-                Close
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>

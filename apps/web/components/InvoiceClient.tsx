@@ -3,14 +3,15 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Order } from "@/types";
+import { Order, DeliveryShipment } from "@/types";
 import { getOrderById } from "@/lib/orders";
-import { fetchOrderDetail } from "@/lib/api";
+import { fetchDeliveryTracking, fetchOrderDetail } from "@/lib/api";
 import { downloadInvoice } from "@/lib/downloadInvoice";
 import { toKhr } from "@/lib/cambodiaLocations";
 import OrderStepper from "@/components/OrderStepper";
 import BakongKhqrCard from "@/components/BakongKhqrCard";
 import { buildBakongKhqr } from "@/lib/khqr";
+import DeliveryTrackingCard from "@/components/delivery/DeliveryTrackingCard";
 
 interface InvoiceClientProps {
   orderId: string;
@@ -19,6 +20,7 @@ interface InvoiceClientProps {
 
 export default function InvoiceClient({ orderId, token }: InvoiceClientProps) {
   const [order, setOrder] = useState<Order | null>(null);
+  const [shipment, setShipment] = useState<DeliveryShipment | null>(null);
   const [isLoading, setIsLoading] = useState(() => Boolean(orderId));
 
   useEffect(() => {
@@ -42,6 +44,17 @@ export default function InvoiceClient({ orderId, token }: InvoiceClientProps) {
         if (remoteOrder && isMounted) {
           setOrder(remoteOrder);
           setIsLoading(false);
+
+          if (remoteOrder.trackingNumber) {
+            try {
+              const liveShipment = await fetchDeliveryTracking(remoteOrder.trackingNumber);
+              if (liveShipment && isMounted) {
+                setShipment(liveShipment);
+              }
+            } catch {
+              // Ignore tracking fetch failure
+            }
+          }
           return;
         }
       } catch {
@@ -111,7 +124,7 @@ export default function InvoiceClient({ orderId, token }: InvoiceClientProps) {
 
   const trackingNumber = order.trackingNumber || `KH-${order.id.slice(-7)}`;
   const shippingCost = typeof order.shippingCost === "number" ? order.shippingCost : 0;
-  
+
   const shippingName = order.customer.shippingMethod === "phnom_penh_express"
     ? "Phnom Penh Express (Same-Day Rider)"
     : order.customer.shippingMethod === "phnom_penh_standard"
@@ -121,12 +134,12 @@ export default function InvoiceClient({ orderId, token }: InvoiceClientProps) {
   const isPaid = order.paymentStatus === "PAID" || order.status === "processing" || order.status === "delivered";
 
   const paymentBadge = isPaid
-    ? { label: "Paid via KHQR", color: "bg-forest/10 text-forest border-forest/30" }
+    ? { label: "Paid via KHQR", color: "bg-sage/10 text-sage border-sage/30" }
     : order.customer.paymentMethod === "cod"
-    ? { label: "Cash on Delivery (Pending)", color: "bg-amber-500/10 text-amber-700 border-amber-500/30" }
+    ? { label: "Cash on Delivery", color: "bg-surface text-ink-soft border-border-strong" }
     : order.customer.paymentMethod === "card"
-    ? { label: "Card Payment (Pending)", color: "bg-amber-500/10 text-amber-700 border-amber-500/30" }
-    : { label: "Awaiting KHQR Payment", color: "bg-amber-500/10 text-amber-700 border-amber-500/30" };
+    ? { label: "Card Payment", color: "bg-amber-50 text-amber-800 border-amber-200" }
+    : { label: "Awaiting KHQR Payment", color: "bg-amber-50 text-amber-800 border-amber-200" };
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6">
@@ -136,34 +149,54 @@ export default function InvoiceClient({ orderId, token }: InvoiceClientProps) {
       </div>
 
       {/* Confirmation & Action Top Bar (Hidden on Print) */}
-      <div className="no-print mb-6 border border-border bg-paper p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-forest/10 text-forest text-xs font-bold">
+      <div className="no-print mb-6 border border-border bg-paper p-4 sm:p-5 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        {/* Left Status & Details */}
+        <div className="flex items-start sm:items-center gap-3 min-w-0">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sage/10 text-sage text-sm font-bold mt-0.5 sm:mt-0">
             ✓
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h2 className="type-label text-xs uppercase tracking-wider text-ink font-semibold">
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="type-label text-xs uppercase tracking-wider text-ink font-semibold whitespace-nowrap">
                 Order Confirmed
               </h2>
-              <span className={`rounded border px-2 py-0.5 text-[10px] font-medium uppercase ${paymentBadge.color}`}>
+              <span className={`inline-flex items-center px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider rounded-xs border whitespace-nowrap shrink-0 ${paymentBadge.color}`}>
                 {paymentBadge.label}
               </span>
             </div>
-            <p className="text-xs text-ink-soft mt-0.5">
-              Receipt reference <strong className="text-ink tabular-nums">{order.id}</strong> dispatched to {order.customer.phone}
+            <p className="text-xs text-ink-soft mt-1 leading-relaxed">
+              <span>Receipt reference </span>
+              <strong className="font-mono font-semibold text-ink tabular-nums whitespace-nowrap">{order.id}</strong>
+              {order.customer.phone && (
+                <>
+                  <span className="text-border-strong mx-1.5">·</span>
+                  <span>Dispatched to </span>
+                  <span className="font-mono text-ink whitespace-nowrap">{order.customer.phone}</span>
+                </>
+              )}
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        {/* Right Action Buttons */}
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 shrink-0 pt-3 lg:pt-0 border-t lg:border-t-0 border-border/60">
+          {trackingNumber && (
+            <Link
+              href={`/tracking/${trackingNumber}`}
+              className="type-label inline-flex items-center justify-center gap-1.5 border border-ctrl-red/40 bg-ctrl-red/5 px-3.5 py-2 text-xs uppercase tracking-wider text-ctrl-red hover:bg-ctrl-red hover:text-paper transition-all cursor-pointer font-semibold shadow-2xs whitespace-nowrap"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-ctrl-red animate-ping" />
+              <span>Track Delivery &rarr;</span>
+            </Link>
+          )}
+
           <button
             type="button"
             onClick={() => window.print()}
-            className="type-label inline-flex items-center justify-center border border-border bg-canvas px-4 py-2 text-xs uppercase tracking-wider text-ink hover:border-ink hover:bg-paper transition-colors cursor-pointer"
+            className="type-label inline-flex items-center justify-center gap-1.5 border border-border bg-paper hover:bg-surface px-3.5 py-2 text-xs uppercase tracking-wider text-ink transition-colors cursor-pointer font-medium shadow-2xs whitespace-nowrap"
           >
             <svg
-              className="mr-1.5 h-3.5 w-3.5 text-ink-soft"
+              className="h-3.5 w-3.5 text-ink-soft"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -171,13 +204,13 @@ export default function InvoiceClient({ orderId, token }: InvoiceClientProps) {
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
             </svg>
-            Print Invoice Only
+            <span>Print Invoice</span>
           </button>
 
           <button
             type="button"
             onClick={() => downloadInvoice(order)}
-            className="type-label inline-flex items-center justify-center gap-1.5 bg-ink px-4 py-2 text-xs uppercase tracking-wider text-paper hover:bg-ink-soft transition-colors cursor-pointer font-semibold shadow-xs"
+            className="type-label inline-flex items-center justify-center gap-1.5 bg-ink hover:bg-charcoal text-paper px-3.5 py-2 text-xs uppercase tracking-wider transition-colors cursor-pointer font-semibold shadow-2xs whitespace-nowrap"
           >
             <svg
               className="h-3.5 w-3.5"
@@ -192,10 +225,17 @@ export default function InvoiceClient({ orderId, token }: InvoiceClientProps) {
                 d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
               />
             </svg>
-            <span>Download Invoice (.html)</span>
+            <span>Download HTML</span>
           </button>
         </div>
       </div>
+
+      {/* Live Delivery & Fulfillment Tracking Card (Hidden on Print) */}
+      {shipment && (
+        <div className="no-print">
+          <DeliveryTrackingCard initialShipment={shipment} />
+        </div>
+      )}
 
       {/* ISOLATED PRINTABLE INVOICE CARD (Only this card prints!) */}
       <div className="printable-invoice-card border border-border bg-paper shadow-sm overflow-hidden">
@@ -243,9 +283,13 @@ export default function InvoiceClient({ orderId, token }: InvoiceClientProps) {
             <span className="type-label text-[10px] uppercase tracking-wider text-ink-soft block">
               Courier Tracking
             </span>
-            <span className="text-xs font-semibold tabular-nums text-ink mt-0.5 block">
-              {trackingNumber}
-            </span>
+            <Link
+              href={`/tracking/${trackingNumber}`}
+              className="text-xs font-semibold tabular-nums text-ctrl-red hover:underline mt-0.5 inline-flex items-center gap-1 group"
+            >
+              <span>{trackingNumber}</span>
+              <span className="text-[10px] group-hover:translate-x-0.5 transition-transform">&rarr;</span>
+            </Link>
           </div>
           <div className="p-4">
             <span className="type-label text-[10px] uppercase tracking-wider text-ink-soft block">

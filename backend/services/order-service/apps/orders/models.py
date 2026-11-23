@@ -1,6 +1,7 @@
 import secrets
 from decimal import Decimal
 from django.db import models
+from django.utils import timezone
 from django.core.validators import MinValueValidator
 from apps.core.models import TimeStampedModel, UUIDModel
 
@@ -179,3 +180,76 @@ class OrderStatusHistory(TimeStampedModel):
         verbose_name = 'Order Status History'
         verbose_name_plural = 'Order Status Histories'
         ordering = ['-created_at']
+
+class DeliveryShipment(TimeStampedModel, UUIDModel):
+    STATUS_CHOICES = (
+        ('PENDING_DISPATCH', 'Pending Dispatch'),
+        ('PACKED', 'Packed & Ready'),
+        ('PICKED_UP', 'Picked Up by Courier'),
+        ('OUT_FOR_DELIVERY', 'Out for Delivery'),
+        ('DELIVERED', 'Delivered'),
+        ('FAILED_ATTEMPT', 'Failed Delivery Attempt'),
+        ('RETURNED', 'Returned to Hub'),
+    )
+
+    order = models.OneToOneField(
+        Order,
+        on_delete=models.CASCADE,
+        related_name='shipment'
+    )
+    tracking_number = models.CharField(max_length=64, unique=True, db_index=True)
+    courier_name = models.CharField(max_length=120, default='Clothes Express Phnom Penh')
+    courier_phone = models.CharField(max_length=40, blank=True, default='+855 12 889 900')
+    driver_name = models.CharField(max_length=120, blank=True)
+    driver_phone = models.CharField(max_length=40, blank=True)
+    vehicle_info = models.CharField(max_length=120, blank=True, default='Motorbike Courier')
+
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='PENDING_DISPATCH', db_index=True)
+    shipping_method_code = models.CharField(max_length=40, default='phnom_penh_express')
+    destination_city = models.CharField(max_length=100)
+    destination_address = models.CharField(max_length=255)
+    recipient_name = models.CharField(max_length=150)
+    recipient_phone = models.CharField(max_length=32)
+
+    # Coordinates for Leaflet map & OSRM road routing
+    origin_lat = models.DecimalField(max_digits=9, decimal_places=6, default=Decimal('11.576100')) # Clothes Toul Kork Hub
+    origin_lng = models.DecimalField(max_digits=9, decimal_places=6, default=Decimal('104.898800'))
+    dest_lat = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    dest_lng = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    current_lat = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    current_lng = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    heading = models.FloatField(null=True, blank=True)
+    speed = models.FloatField(null=True, blank=True)
+
+    estimated_delivery_at = models.DateTimeField(null=True, blank=True)
+    dispatched_at = models.DateTimeField(null=True, blank=True)
+    delivered_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Delivery Shipment'
+        verbose_name_plural = 'Delivery Shipments'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Shipment {self.tracking_number} ({self.status}) for Order {self.order.order_number}"
+
+class DeliveryTimelineEvent(TimeStampedModel):
+    shipment = models.ForeignKey(
+        DeliveryShipment,
+        on_delete=models.CASCADE,
+        related_name='timeline'
+    )
+    status = models.CharField(max_length=30)
+    title = models.CharField(max_length=150)
+    description = models.TextField(blank=True)
+    location = models.CharField(max_length=150, blank=True)
+    occurred_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        verbose_name = 'Delivery Timeline Event'
+        verbose_name_plural = 'Delivery Timeline Events'
+        ordering = ['occurred_at']
+
+    def __str__(self):
+        return f"{self.shipment.tracking_number} - {self.status} at {self.occurred_at}"
+

@@ -1,4 +1,16 @@
-import { Product, ProductVariant, CartItem, Customer, Order, Audience, Department, Subcategory, ShippingMethod, PaymentMethod } from "@/types";
+import {
+  Product,
+  ProductVariant,
+  CartItem,
+  Customer,
+  Order,
+  Audience,
+  Department,
+  Subcategory,
+  ShippingMethod,
+  PaymentMethod,
+  DeliveryShipment,
+} from "@/types";
 import { apiClient, API_BASE } from "@/lib/apiClient";
 export { API_BASE };
 
@@ -12,6 +24,15 @@ interface DjangoVariantResponse {
   stock: number;
   is_default?: boolean;
   is_active?: boolean;
+}
+
+interface DjangoTimelineEventResponse {
+  id: number;
+  status: string;
+  title: string;
+  description: string;
+  location: string;
+  occurred_at: string;
 }
 
 interface DjangoProductResponse {
@@ -402,3 +423,83 @@ export async function fetchOrderDetail(
     return null;
   }
 }
+
+export async function fetchDeliveryTracking(
+  trackingNumber: string
+): Promise<DeliveryShipment | null> {
+  try {
+    const res = await fetch(
+      `${API_BASE}/orders/tracking/${encodeURIComponent(trackingNumber)}/`,
+      {
+        cache: "no-store",
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+    if (!res.ok) {
+      return null;
+    }
+    const data = await res.json();
+    return {
+      id: data.id,
+      orderNumber: data.order_number,
+      trackingNumber: data.tracking_number,
+      courierName: data.courier_name,
+      courierPhone: data.courier_phone,
+      driverName: data.driver_name,
+      driverPhone: data.driver_phone,
+      vehicleInfo: data.vehicle_info,
+      status: data.status,
+      shippingMethodCode: data.shipping_method_code,
+      destinationCity: data.destination_city,
+      destinationAddress: data.destination_address,
+      recipientName: data.recipient_name,
+      recipientPhone: data.recipient_phone,
+      originLat: parseFloat(data.origin_lat || "11.5761"),
+      originLng: parseFloat(data.origin_lng || "104.8988"),
+      destLat: parseFloat(data.dest_lat || "11.5564"),
+      destLng: parseFloat(data.dest_lng || "104.9282"),
+      currentLat: data.current_lat ? parseFloat(data.current_lat) : undefined,
+      currentLng: data.current_lng ? parseFloat(data.current_lng) : undefined,
+      heading: data.heading,
+      speed: data.speed,
+      estimatedDeliveryAt: data.estimated_delivery_at,
+      dispatchedAt: data.dispatched_at,
+      deliveredAt: data.delivered_at,
+      timeline: (data.timeline || []).map((ev: DjangoTimelineEventResponse) => ({
+        id: ev.id,
+        status: ev.status,
+        title: ev.title,
+        description: ev.description,
+        location: ev.location,
+        occurred_at: ev.occurred_at,
+      })),
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+    };
+  } catch (err) {
+    console.warn("Could not fetch delivery tracking:", err);
+    return null;
+  }
+}
+
+export async function updateRiderLocation(
+  trackingNumber: string,
+  coords: { latitude: number; longitude: number; heading?: number | null; speed?: number | null }
+): Promise<boolean> {
+  try {
+    const res = await fetch(
+      `${API_BASE}/orders/tracking/${encodeURIComponent(trackingNumber)}/location/`,
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(coords),
+      }
+    );
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+export default fetchDeliveryTracking;
+

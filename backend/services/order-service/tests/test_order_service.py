@@ -134,7 +134,9 @@ class TestOrderService:
             # Verify compensating transaction called to release reservation!
             mock_release.assert_called_once_with("99999999-8888-7777-6666-555555555555")
 
-    def test_internal_order_status_update(self, api_client, shipping_method):
+    @patch('apps.orders.client.NotificationServiceClient.send_order_confirmation')
+    def test_internal_order_status_update(self, mock_notify, api_client, shipping_method):
+        mock_notify.return_value = True
         order = Order.objects.create(
             order_number="CLO-20261121-STATUS",
             customer_name="Test Customer",
@@ -155,7 +157,17 @@ class TestOrderService:
             "payment_status": "PAID",
             "notes": "Bakong KHQR payment verified"
         }
-        res = api_client.patch(f'/internal/orders/{order.id}/status/', update_payload, format='json')
+        # Unauthenticated request without X-Internal-Service-Key is rejected
+        unauth_res = api_client.patch(f'/internal/orders/{order.id}/status/', update_payload, format='json')
+        assert unauth_res.status_code == status.HTTP_403_FORBIDDEN
+
+        # Authenticated internal request with valid key succeeds
+        res = api_client.patch(
+            f'/internal/orders/{order.id}/status/',
+            update_payload,
+            format='json',
+            HTTP_X_INTERNAL_SERVICE_KEY='ec-internal-shared-secret-key-2026'
+        )
         assert res.status_code == status.HTTP_200_OK
         order.refresh_from_db()
         assert order.status == 'PROCESSING'

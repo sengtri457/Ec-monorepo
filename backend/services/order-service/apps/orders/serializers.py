@@ -1,5 +1,12 @@
 from rest_framework import serializers
-from apps.orders.models import Order, OrderItem, ShippingMethod, OrderStatusHistory
+from apps.orders.models import (
+    Order,
+    OrderItem,
+    ShippingMethod,
+    OrderStatusHistory,
+    DeliveryShipment,
+    DeliveryTimelineEvent,
+)
 
 class ShippingMethodSerializer(serializers.ModelSerializer):
     class Meta:
@@ -85,3 +92,81 @@ class OrderStatusUpdateSerializer(serializers.Serializer):
     payment_status = serializers.ChoiceField(choices=Order.PAYMENT_STATUS_CHOICES, required=False)
     notes = serializers.CharField(required=False, allow_blank=True, default='')
     changed_by_user_id = serializers.IntegerField(required=False, allow_null=True, default=None)
+
+class DeliveryTimelineEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = DeliveryTimelineEvent
+        fields = ['id', 'status', 'title', 'description', 'location', 'occurred_at']
+
+class DeliveryShipmentSerializer(serializers.ModelSerializer):
+    timeline = DeliveryTimelineEventSerializer(many=True, read_only=True)
+    order_number = serializers.CharField(source='order.order_number', read_only=True)
+
+    class Meta:
+        model = DeliveryShipment
+        fields = [
+            'id',
+            'order_number',
+            'tracking_number',
+            'courier_name',
+            'courier_phone',
+            'driver_name',
+            'driver_phone',
+            'vehicle_info',
+            'status',
+            'shipping_method_code',
+            'destination_city',
+            'destination_address',
+            'recipient_name',
+            'recipient_phone',
+            'origin_lat',
+            'origin_lng',
+            'dest_lat',
+            'dest_lng',
+            'current_lat',
+            'current_lng',
+            'heading',
+            'speed',
+            'estimated_delivery_at',
+            'dispatched_at',
+            'delivered_at',
+            'timeline',
+            'created_at',
+            'updated_at',
+        ]
+
+class AdminOrderListSerializer(serializers.ModelSerializer):
+    items_count = serializers.IntegerField(source='items.count', read_only=True)
+    shipping_method_name = serializers.CharField(source='shipping_method.name', read_only=True)
+
+    class Meta:
+        model = Order
+        fields = [
+            'id',
+            'order_number',
+            'customer_name',
+            'customer_email',
+            'customer_phone',
+            'city_province',
+            'total_usd',
+            'total_khr',
+            'status',
+            'payment_status',
+            'shipping_method_name',
+            'items_count',
+            'created_at',
+        ]
+
+class OrderStatusHistorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderStatusHistory
+        fields = ['id', 'from_status', 'to_status', 'changed_by_user_id', 'notes', 'created_at']
+
+class AdminOrderDetailSerializer(OrderSerializer):
+    shipment = DeliveryShipmentSerializer(read_only=True)
+    status_history = OrderStatusHistorySerializer(many=True, read_only=True)
+
+    class Meta(OrderSerializer.Meta):
+        fields = OrderSerializer.Meta.fields + ['shipment', 'status_history', 'updated_at']
+
+

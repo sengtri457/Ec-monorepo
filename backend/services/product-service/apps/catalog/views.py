@@ -6,7 +6,9 @@ from apps.catalog.serializers import (
     CategorySerializer,
     ProductListSerializer,
     ProductDetailSerializer,
+    AdminProductSerializer,
 )
+from apps.core.admin_permissions import IsAdminOrStaffUser
 
 class CategoryListView(generics.ListAPIView):
     queryset = Category.objects.filter(is_active=True)
@@ -62,3 +64,29 @@ class ProductViewSet(viewsets.ReadOnlyModelViewSet):
             if obj:
                 return obj
         return queryset.filter(slug=lookup_value).first() or super().get_object()
+
+class AdminProductViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAdminOrStaffUser]
+    serializer_class = AdminProductSerializer
+    lookup_field = 'id'
+
+    def get_queryset(self):
+        qs = Product.objects.all().select_related('category').prefetch_related('variants', 'images').order_by('-created_at')
+
+        search = self.request.query_params.get('search')
+        if search:
+            qs = qs.filter(Q(title__icontains=search) | Q(description__icontains=search) | Q(slug__icontains=search))
+
+        category = self.request.query_params.get('category')
+        if category and category != 'all':
+            qs = qs.filter(category__slug=category)
+
+        department = self.request.query_params.get('department')
+        if department and department != 'all':
+            qs = qs.filter(department=department)
+
+        is_active = self.request.query_params.get('is_active')
+        if is_active is not None and is_active != '':
+            qs = qs.filter(is_active=(is_active.lower() in ('true', '1')))
+
+        return qs

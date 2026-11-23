@@ -192,6 +192,15 @@ export default function Footer() {
                   Customer Account &amp; Order Status
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/tracking"
+                  className="text-ctrl-red font-medium hover:text-paper hover:translate-x-0.5 inline-flex items-center gap-1.5 transition-all"
+                >
+                  <span>Track Your Delivery (Live GPS)</span>
+                  <span aria-hidden="true">&rarr;</span>
+                </Link>
+              </li>
               <li className="text-paper/75">
                 <span className="text-paper/90 font-medium">Phnom Penh Express Delivery</span>
                 <span className="block text-[11px] text-paper/50">Same-Day Rider &amp; Next-Day Doorstep</span>

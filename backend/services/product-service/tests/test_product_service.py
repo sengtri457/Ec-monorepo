@@ -11,6 +11,12 @@ def api_client():
     return APIClient()
 
 @pytest.fixture
+def internal_api_client():
+    client = APIClient()
+    client.credentials(HTTP_X_INTERNAL_SERVICE_KEY='ec-internal-shared-secret-key-2026')
+    return client
+
+@pytest.fixture
 def setup_catalog(db):
     cat = Category.objects.create(
         name="T-Shirts",
@@ -109,9 +115,13 @@ class TestProductService:
         assert data['sku'] == v1.sku
         assert data['available_stock'] == 10
 
-    def test_stock_reservation_success_lifecycle(self, api_client, setup_catalog):
+    def test_stock_reservation_success_lifecycle(self, api_client, internal_api_client, setup_catalog):
         _, _, v1, v2 = setup_catalog
-        # 1. Create reservation
+        # 1. Unauthenticated request without X-Internal-Service-Key is rejected
+        unauth_res = api_client.post('/internal/inventory/reservations/', {}, format='json')
+        assert unauth_res.status_code == status.HTTP_403_FORBIDDEN
+
+        # 2. Create reservation with internal client
         reservation_payload = {
             "order_id": "ORD-TEST-001",
             "items": [
@@ -119,7 +129,7 @@ class TestProductService:
                 {"variant_id": v2.id, "quantity": 2}
             ]
         }
-        res = api_client.post('/internal/inventory/reservations/', reservation_payload, format='json')
+        res = internal_api_client.post('/internal/inventory/reservations/', reservation_payload, format='json')
         assert res.status_code == status.HTTP_201_CREATED
         res_data = res.json()
         reservation_id = res_data['id']
@@ -131,12 +141,12 @@ class TestProductService:
         assert v1.stock == 7  # 10 - 3
         assert v2.stock == 3  # 5 - 2
 
-        # 2. Confirm reservation
-        confirm_res = api_client.post(f'/internal/inventory/reservations/{reservation_id}/confirm/')
+        # 3. Confirm reservation
+        confirm_res = internal_api_client.post(f'/internal/inventory/reservations/{reservation_id}/confirm/')
         assert confirm_res.status_code == status.HTTP_200_OK
         assert confirm_res.json()['status'] == 'CONFIRMED'
 
-    def test_stock_reservation_insufficient_stock_fails(self, api_client, setup_catalog):
+    def test_stock_reservation_insufficient_stock_fails(self, internal_api_client, setup_catalog):
         _, _, v1, _ = setup_catalog
         reservation_payload = {
             "order_id": "ORD-TEST-FAIL",
@@ -144,15 +154,15 @@ class TestProductService:
                 {"variant_id": v1.id, "quantity": 999}
             ]
         }
-        res = api_client.post('/internal/inventory/reservations/', reservation_payload, format='json')
+        res = internal_api_client.post('/internal/inventory/reservations/', reservation_payload, format='json')
         assert res.status_code == status.HTTP_400_BAD_REQUEST
         v1.refresh_from_db()
         assert v1.stock == 10  # Untouched
 
-    def test_stock_reservation_release_lifecycle(self, api_client, setup_catalog):
+    def test_stock_reservation_release_lifecycle(self, internal_api_client, setup_catalog):
         _, _, v1, _ = setup_catalog
         # Reserve 4 units
-        res = api_client.post('/internal/inventory/reservations/', {
+        res = internal_api_client.post('/internal/inventory/reservations/', {
             "order_id": "ORD-TEST-RELEASE",
             "items": [{"variant_id": v1.id, "quantity": 4}]
         }, format='json')
@@ -162,7 +172,7 @@ class TestProductService:
         assert v1.stock == 6
 
         # Release reservation
-        rel_res = api_client.post(f'/internal/inventory/reservations/{res_id}/release/')
+        rel_res = internal_api_client.post(f'/internal/inventory/reservations/{res_id}/release/')
         assert rel_res.status_code == status.HTTP_200_OK
         assert rel_res.json()['status'] == 'RELEASED'
 
@@ -170,7 +180,7 @@ class TestProductService:
         assert v1.stock == 10  # Fully restored!
 
         # Second release call is idempotent
-        rel_res2 = api_client.post(f'/internal/inventory/reservations/{res_id}/release/')
+        rel_res2 = internal_api_client.post(f'/internal/inventory/reservations/{res_id}/release/')
         assert rel_res2.status_code == status.HTTP_200_OK
         v1.refresh_from_db()
         assert v1.stock == 10
