@@ -295,6 +295,15 @@ export type AdminOrderStatusHistory = {
 export type AdminOrderDetail = Order & {
   orderNumber?: string;
   order_number?: string;
+  payment_status?: string;
+  total_usd?: number;
+  subtotal_usd?: number;
+  shipping_fee_usd?: number;
+  customer_name?: string;
+  customer_phone?: string;
+  customer_email?: string;
+  shipping_address?: string;
+  city_province?: string;
   statusHistory?: AdminOrderStatusHistory[];
   status_history?: AdminOrderStatusHistory[];
   shipment?: DeliveryShipment;
