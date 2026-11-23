@@ -4,12 +4,19 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.db import connection
 from django.utils import timezone
-from apps.orders.models import Order, ShippingMethod, OrderStatusHistory
+from apps.orders.models import (
+    Order,
+    ShippingMethod,
+    OrderStatusHistory,
+    DeliveryShipment,
+    DeliveryTimelineEvent,
+)
 from apps.orders.serializers import (
     OrderSerializer,
     ShippingMethodSerializer,
     CheckoutInputSerializer,
     OrderStatusUpdateSerializer,
+    DeliveryShipmentSerializer,
 )
 from apps.orders.services import CheckoutService
 from apps.orders.client import ProductServiceClient, NotificationServiceClient
@@ -172,3 +179,140 @@ class InternalOrderStatusUpdateView(APIView):
             NotificationServiceClient.send_order_confirmation(order)
 
         return Response(OrderSerializer(order).data, status=status.HTTP_200_OK)
+
+class PublicDeliveryTrackingView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, tracking_number):
+        try:
+            shipment = DeliveryShipment.objects.prefetch_related('timeline').get(
+                tracking_number__iexact=tracking_number.strip()
+            )
+        except DeliveryShipment.DoesNotExist:
+            return Response(
+                {"error": {"code": "NOT_FOUND", "message": f"Tracking number '{tracking_number}' not found."}},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        serializer = DeliveryShipmentSerializer(shipment)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+class OrderDetailDeliveryView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, order_number):
+        try:
+            order = Order.objects.get(order_number=order_number)
+        except Order.DoesNotExist:
+            return Response(
+                {"error": {"code": "NOT_FOUND", "message": "Order not found."}},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        user_id = get_current_user_id(request)
+        token = request.headers.get('X-Order-Token') or request.query_params.get('token')
+        if not (user_id and order.user_id == user_id) and token != order.guest_access_token:
+            return Response(
+                {"error": {"code": "FORBIDDEN", "message": "Access denied to order delivery information."}},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        try:
+            shipment = order.shipment
+        except DeliveryShipment.DoesNotExist:
+            return Response(
+                {"error": {"code": "NOT_DISPATCHED", "message": "Fulfillment not yet created for this order."}},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        return Response(DeliveryShipmentSerializer(shipment).data, status=status.HTTP_200_OK)
+
+class RiderLocationUpdateView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def patch(self, request, tracking_number):
+        try:
+            shipment = DeliveryShipment.objects.get(tracking_number__iexact=tracking_number.strip())
+        except DeliveryShipment.DoesNotExist:
+            return Response(
+                {"error": {"code": "NOT_FOUND", "message": "Shipment not found."}},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        lat = request.data.get('latitude')
+        lng = request.data.get('longitude')
+        heading = request.data.get('heading')
+        speed = request.data.get('speed')
+
+        if lat is None or lng is None:
+            return Response({"error": "Latitude and longitude required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        shipment.current_lat = lat
+        shipment.current_lng = lng
+        if heading is not None:
+            shipment.heading = heading
+        if speed is not None:
+            shipment.speed = speed
+
+        # Transition status to OUT_FOR_DELIVERY if first live location ping
+        if shipment.status in ['PENDING_DISPATCH', 'PACKED', 'PICKED_UP']:
+            shipment.status = 'OUT_FOR_DELIVERY'
+            shipment.order.status = 'SHIPPED'
+            shipment.order.save(update_fields=['status', 'updated_at'])
+            DeliveryTimelineEvent.objects.create(
+                shipment=shipment,
+                status='OUT_FOR_DELIVERY',
+                title='Courier En Route with Live GPS',
+                description=f'Rider {shipment.driver_name} is navigating with live coordinates.',
+                location=shipment.destination_city
+            )
+
+        shipment.save(update_fields=['current_lat', 'current_lng', 'heading', 'speed', 'status', 'updated_at'])
+        return Response(DeliveryShipmentSerializer(shipment).data, status=status.HTTP_200_OK)
+
+class InternalShipmentStatusUpdateView(APIView):
+    permission_classes = [IsInternalService]
+
+    def patch(self, request, tracking_number):
+        try:
+            shipment = DeliveryShipment.objects.get(tracking_number__iexact=tracking_number.strip())
+        except DeliveryShipment.DoesNotExist:
+            return Response(
+                {"error": {"code": "NOT_FOUND", "message": "Shipment not found."}},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        new_status = request.data.get('status')
+        if not new_status or new_status not in dict(DeliveryShipment.STATUS_CHOICES):
+            return Response(
+                {"error": {"code": "INVALID_STATUS", "message": "Invalid shipment status."}},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        shipment.status = new_status
+        now = timezone.now()
+        if new_status == 'DELIVERED':
+            shipment.delivered_at = now
+            shipment.order.status = 'DELIVERED'
+            shipment.order.save(update_fields=['status', 'updated_at'])
+        elif new_status == 'OUT_FOR_DELIVERY':
+            shipment.order.status = 'SHIPPED'
+            shipment.order.save(update_fields=['status', 'updated_at'])
+
+        shipment.save(update_fields=['status', 'delivered_at', 'updated_at'])
+
+        title = request.data.get('title') or f"Status updated to {new_status}"
+        description = request.data.get('description', '')
+        location = request.data.get('location', '')
+
+        DeliveryTimelineEvent.objects.create(
+            shipment=shipment,
+            status=new_status,
+            title=title,
+            description=description,
+            location=location,
+            occurred_at=now
+        )
+
+        return Response(DeliveryShipmentSerializer(shipment).data, status=status.HTTP_200_OK)
+
