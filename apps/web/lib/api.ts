@@ -501,32 +501,73 @@ export async function updateRiderLocation(
   }
 }
 
+interface DjangoOrderItemResponse {
+  sku: string;
+  size?: string;
+  color?: string;
+  unit_price?: string | number;
+  product_title?: string;
+  quantity: number;
+  variant?: { id?: number; product_id?: number };
+  variant_id?: number;
+}
+
+interface DjangoOrderResponse {
+  order_number: string;
+  created_at: string;
+  customer_name?: string;
+  customer_email?: string;
+  customer_phone?: string;
+  customer_telegram?: string;
+  street_address?: string;
+  khan_district?: string;
+  sangkat_commune?: string;
+  city_province?: string;
+  landmark?: string;
+  shipping_method?: { code?: string; name?: string };
+  shipping_cost?: string | number;
+  payments?: Array<{ payment_method?: string }>;
+  order_notes?: string;
+  items?: DjangoOrderItemResponse[];
+  subtotal?: string | number;
+  tax?: string | number;
+  total_usd?: string | number;
+  total_khr?: string | number;
+  tracking_number?: string;
+  status?: string;
+  payment_status?: string;
+}
+
+interface PaginatedListResponse<T> {
+  results?: T[];
+}
+
 export async function fetchCustomerOrders(): Promise<Order[]> {
   try {
-    const res = await apiClient<any>("/orders/", {
+    const res = await apiClient<DjangoOrderResponse[] | PaginatedListResponse<DjangoOrderResponse>>("/orders/", {
       cache: "no-store",
     });
     const orderList = Array.isArray(res) ? res : res.results || [];
-    return orderList.map((data: any) => ({
+    return orderList.map((data: DjangoOrderResponse) => ({
       id: data.order_number,
       createdAt: data.created_at,
       customer: {
-        name: data.customer_name,
-        email: data.customer_email,
-        phone: data.customer_phone,
+        name: data.customer_name || "",
+        email: data.customer_email || "",
+        phone: data.customer_phone || "",
         telegram: data.customer_telegram,
-        address: `${data.street_address}, ${data.khan_district ? data.khan_district + ", " : ""}${data.city_province}`,
-        cityProvince: data.city_province,
+        address: `${data.street_address || ""}, ${data.khan_district ? data.khan_district + ", " : ""}${data.city_province || ""}`,
+        cityProvince: data.city_province || "",
         khanDistrict: data.khan_district,
         sangkatCommune: data.sangkat_commune,
-        streetAddress: data.street_address,
+        streetAddress: data.street_address || "",
         landmark: data.landmark,
         shippingMethod: (data.shipping_method?.code as ShippingMethod) || "phnom_penh_express",
-        shippingCost: parseFloat(data.shipping_cost || "0"),
+        shippingCost: parseFloat(String(data.shipping_cost || "0")),
         paymentMethod: (data.payments?.[0]?.payment_method?.toLowerCase() as PaymentMethod) || "khqr",
         orderNotes: data.order_notes,
       },
-      items: (data.items || []).map((item: any) => ({
+      items: (data.items || []).map((item: DjangoOrderItemResponse) => ({
         id: `${item.sku}`,
         productId: item.variant?.product_id || item.variant_id || 1,
         variantId: item.variant?.id || item.variant_id,
@@ -534,14 +575,14 @@ export async function fetchCustomerOrders(): Promise<Order[]> {
         selectedSize: item.size,
         selectedColor: item.color,
         title: item.product_title || "Apparel Item",
-        price: parseFloat(item.unit_price || "0"),
+        price: parseFloat(String(item.unit_price || "0")),
         thumbnail: "/collection/ctrl-blazer.webp",
         quantity: item.quantity,
       })),
-      subtotal: parseFloat(data.subtotal || "0"),
-      shippingCost: parseFloat(data.shipping_cost || "0"),
-      tax: parseFloat(data.tax || "0"),
-      total: parseFloat(data.total_usd || "0"),
+      subtotal: parseFloat(String(data.subtotal || "0")),
+      shippingCost: parseFloat(String(data.shipping_cost || "0")),
+      tax: parseFloat(String(data.tax || "0")),
+      total: parseFloat(String(data.total_usd || "0")),
       totalKhr: data.total_khr,
       trackingNumber: data.tracking_number,
       status: (data.status?.toLowerCase() as Order["status"]) || "confirmed",
@@ -570,7 +611,7 @@ export interface BackendCustomerAddress {
 
 export async function fetchCustomerAddresses(): Promise<BackendCustomerAddress[]> {
   try {
-    const res = await apiClient<any>("/addresses/", {
+    const res = await apiClient<BackendCustomerAddress[] | PaginatedListResponse<BackendCustomerAddress>>("/addresses/", {
       cache: "no-store",
     });
     return Array.isArray(res) ? res : res.results || [];
