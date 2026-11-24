@@ -1,0 +1,109 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+  namespace: ecommerce-microservices
+  labels:
+    app: payment-service
+    app.kubernetes.io/name: payment-service
+    app.kubernetes.io/part-of: ecommerce-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: payment-service
+  template:
+    metadata:
+      labels:
+        app: payment-service
+        app.kubernetes.io/name: payment-service
+        app.kubernetes.io/part-of: ecommerce-system
+    spec:
+      initContainers:
+        - name: wait-and-migrate
+          image: ec-payment-service:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for postgres to become available..."
+              until python -c "import socket; s = socket.socket(); s.connect(('postgres', 5432)); s.close()" 2>/dev/null; do
+                sleep 2
+              done
+              echo "Running migrations for payment-service..."
+              python manage.py migrate --noinput
+          envFrom:
+            - configMapRef:
+                name: services-config
+          env:
+            - name: DB_NAME
+              value: "payment_db"
+            - name: DB_USER
+              value: "payment_user"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: services-secrets
+                  key: PAYMENT_DB_PASSWORD
+            - name: DJANGO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: services-secrets
+                  key: DJANGO_SECRET_KEY
+      containers:
+        - name: payment-service
+          image: ec-payment-service:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: services-config
+          env:
+            - name: DB_NAME
+              value: "payment_db"
+            - name: DB_USER
+              value: "payment_user"
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: services-secrets
+                  key: PAYMENT_DB_PASSWORD
+            - name: DJANGO_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: services-secrets
+                  key: DJANGO_SECRET_KEY
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: services-secrets
+                  key: JWT_SECRET_KEY
+            - name: INTERNAL_SERVICE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: services-secrets
+                  key: INTERNAL_SERVICE_KEY
+          ports:
+            - name: http
+              containerPort: 8000
+          readinessProbe:
+            httpGet:
+              path: /health/
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /health/
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 15
+            timeoutSeconds: 3
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "50m"
+            limits:
+              memory: "256Mi"
+              cpu: "250m"
