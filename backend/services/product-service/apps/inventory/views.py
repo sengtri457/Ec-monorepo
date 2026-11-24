@@ -125,10 +125,13 @@ class ReleaseStockReservationView(APIView):
             # Idempotent response
             return Response(StockReservationDetailSerializer(reservation).data, status=status.HTTP_200_OK)
 
-        if reservation.status == 'CONFIRMED':
+        allow_restock = request.data.get('allow_restock_confirmed', False) or request.query_params.get('allow_restock_confirmed', '').lower() == 'true'
+        if reservation.status == 'CONFIRMED' and not allow_restock:
             return Response({
                 "error": {"code": "RESERVATION_ALREADY_CONFIRMED", "message": "Cannot release an already confirmed reservation."}
             }, status=status.HTTP_400_BAD_REQUEST)
+
+        movement_type = 'RETURN' if reservation.status == 'CONFIRMED' else 'RELEASE'
 
         with transaction.atomic():
             for item in reservation.items.select_related('variant').all():
@@ -139,16 +142,54 @@ class ReleaseStockReservationView(APIView):
                 StockMovement.objects.create(
                     variant=variant,
                     quantity_change=item.quantity,
-                    movement_type='RELEASE',
+                    movement_type=movement_type,
                     reference_id=str(reservation.id),
                     balance_after=variant.stock,
-                    notes=f"Released reservation {reservation.id}"
+                    notes=f"{movement_type.capitalize()} reservation {reservation.id}"
                 )
 
             reservation.status = 'RELEASED'
             reservation.save(update_fields=['status', 'updated_at'])
 
         return Response(StockReservationDetailSerializer(reservation).data, status=status.HTTP_200_OK)
+
+class ReleaseExpiredReservationsView(APIView):
+    permission_classes = [IsInternalService]
+
+    def post(self, request):
+        now = timezone.now()
+        expired_reservations = StockReservation.objects.filter(
+            status='PENDING',
+            expires_at__lt=now
+        )
+        reaped_count = 0
+        reaped_ids = []
+
+        for reservation in expired_reservations:
+            with transaction.atomic():
+                for item in reservation.items.select_related('variant').all():
+                    variant = ProductVariant.objects.select_for_update().get(id=item.variant_id)
+                    variant.stock += item.quantity
+                    variant.save(update_fields=['stock', 'updated_at'])
+
+                    StockMovement.objects.create(
+                        variant=variant,
+                        quantity_change=item.quantity,
+                        movement_type='RELEASE',
+                        reference_id=str(reservation.id),
+                        balance_after=variant.stock,
+                        notes=f"Auto-released expired reservation {reservation.id}"
+                    )
+                reservation.status = 'EXPIRED'
+                reservation.save(update_fields=['status', 'updated_at'])
+                reaped_count += 1
+                reaped_ids.append(str(reservation.id))
+
+        return Response({
+            "reaped_count": reaped_count,
+            "reservation_ids": reaped_ids,
+            "message": f"Successfully reaped {reaped_count} expired stock reservations."
+        }, status=status.HTTP_200_OK)
 
 class ConfirmStockReservationView(APIView):
     permission_classes = [IsInternalService]

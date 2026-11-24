@@ -1,4 +1,5 @@
 import pytest
+from unittest.mock import patch
 from decimal import Decimal
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -129,3 +130,34 @@ class TestAdminOrders:
         assert "total_orders" in data
         assert "pending_fulfillment_count" in data
         assert data["total_revenue"] >= 100.0
+
+    @patch('apps.orders.client.ProductServiceClient.release_stock')
+    def test_admin_order_cancellation_triggers_stock_release(self, mock_release_stock, api_client, shipping_method):
+        mock_release_stock.return_value = True
+        reservation_id = "12345678-abcd-ef01-2345-6789abcdef01"
+
+        order = Order.objects.create(
+            order_number="ORD-TEST-CANCEL-1",
+            customer_name="Cancel Test",
+            customer_email="cancel@example.com",
+            customer_phone="012999888",
+            city_province="Phnom Penh",
+            street_address="St 310",
+            shipping_method=shipping_method,
+            subtotal=Decimal("40.00"),
+            shipping_cost=Decimal("2.50"),
+            tax=Decimal("0.00"),
+            total_usd=Decimal("42.50"),
+            status="PENDING",
+            payment_status="UNPAID",
+            stock_reservation_id=reservation_id
+        )
+
+        patch_res = api_client.patch(f'/api/v1/orders/admin/{order.order_number}/status/', {
+            "status": "CANCELLED",
+            "notes": "Cancelled by administrator upon customer request"
+        }, format='json')
+        assert patch_res.status_code == status.HTTP_200_OK
+        assert patch_res.json()["status"] == "CANCELLED"
+
+        mock_release_stock.assert_called_once_with(reservation_id, allow_restock_confirmed=True)

@@ -1,9 +1,12 @@
 import pytest
 from decimal import Decimal
+import datetime
+from django.utils import timezone
+from django.core.management import call_command
 from rest_framework import status
 from rest_framework.test import APIClient
 from apps.catalog.models import Category, Product, ProductVariant
-from apps.inventory.models import StockMovement
+from apps.inventory.models import StockMovement, StockReservation, StockReservationItem
 
 @pytest.fixture
 def api_client():
@@ -68,3 +71,72 @@ class TestAdminInventory:
         }, format='json')
         assert res.status_code == status.HTTP_400_BAD_REQUEST
         assert "error" in res.json()
+
+    def test_release_expired_reservations_endpoint_and_management_command(self, api_client):
+        cat = Category.objects.create(name="Tops", slug="tops-exp")
+        p = Product.objects.create(title="Tee", slug="tee-exp", description="Tee", category=cat, base_price=Decimal("20.00"))
+        variant = ProductVariant.objects.create(product=p, sku="TEE-EXP-1", size="M", stock=7)
+
+        # Create an expired reservation that had deducted 3 items from stock (initial stock was 10)
+        past_time = timezone.now() - datetime.timedelta(minutes=30)
+        reservation = StockReservation.objects.create(
+            order_id="ORD-EXPIRED-TEST",
+            status="PENDING",
+            expires_at=past_time
+        )
+        StockReservationItem.objects.create(
+            reservation=reservation,
+            variant=variant,
+            quantity=3
+        )
+
+        # 1. Trigger via internal endpoint
+        res = api_client.post('/internal/inventory/reservations/reap-expired/', {}, format='json')
+        assert res.status_code == status.HTTP_200_OK
+        data = res.json()
+        assert data["reaped_count"] >= 1
+        assert str(reservation.id) in data["reservation_ids"]
+
+        reservation.refresh_from_db()
+        assert reservation.status == "EXPIRED"
+
+        variant.refresh_from_db()
+        assert variant.stock == 10
+
+        # Verify movement ledger
+        movement = StockMovement.objects.filter(variant=variant, movement_type="RELEASE").latest('created_at')
+        assert movement.quantity_change == 3
+        assert movement.balance_after == 10
+
+    def test_release_confirmed_reservation_with_restock(self, api_client):
+        cat = Category.objects.create(name="Tops", slug="tops-cnf")
+        p = Product.objects.create(title="Tee", slug="tee-cnf", description="Tee", category=cat, base_price=Decimal("20.00"))
+        variant = ProductVariant.objects.create(product=p, sku="TEE-CNF-1", size="L", stock=5)
+
+        reservation = StockReservation.objects.create(
+            order_id="ORD-CONFIRMED-RESTOCK",
+            status="CONFIRMED",
+            expires_at=timezone.now() + datetime.timedelta(hours=1)
+        )
+        StockReservationItem.objects.create(
+            reservation=reservation,
+            variant=variant,
+            quantity=5
+        )
+
+        # Releasing a confirmed reservation without flag should fail
+        res_fail = api_client.post(f'/internal/inventory/reservations/{reservation.id}/release/', {}, format='json')
+        assert res_fail.status_code == status.HTTP_400_BAD_REQUEST
+
+        # Releasing with allow_restock_confirmed=True succeeds and logs RETURN
+        res_ok = api_client.post(f'/internal/inventory/reservations/{reservation.id}/release/', {
+            "allow_restock_confirmed": True
+        }, format='json')
+        assert res_ok.status_code == status.HTTP_200_OK
+
+        variant.refresh_from_db()
+        assert variant.stock == 10
+
+        movement = StockMovement.objects.filter(variant=variant, movement_type="RETURN").latest('created_at')
+        assert movement.quantity_change == 5
+        assert movement.balance_after == 10

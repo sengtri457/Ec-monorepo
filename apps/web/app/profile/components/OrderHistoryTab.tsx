@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Order } from "@/types";
 import { getOrders } from "@/lib/orders";
+import { fetchCustomerOrders } from "@/lib/api";
 import { toKhr } from "@/lib/cambodiaLocations";
 
 // Fallback demo orders for initial presentation if no orders have been placed locally
@@ -87,16 +88,41 @@ const DEMO_ORDERS: Order[] = [
 
 export default function OrderHistoryTab() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const localOrders = getOrders();
-    queueMicrotask(() => {
-      if (localOrders && localOrders.length > 0) {
-        setOrders(localOrders);
-      } else {
-        setOrders(DEMO_ORDERS);
+    let isMounted = true;
+
+    async function loadOrders() {
+      setIsLoading(true);
+      try {
+        const backendOrders = await fetchCustomerOrders();
+        if (isMounted && backendOrders && backendOrders.length > 0) {
+          setOrders(backendOrders);
+          setIsLoading(false);
+          return;
+        }
+      } catch (e) {
+        console.warn("Backend orders fetch error, falling back to local:", e);
       }
-    });
+
+      // Fallback to local storage
+      const localOrders = getOrders();
+      if (isMounted) {
+        if (localOrders && localOrders.length > 0) {
+          setOrders(localOrders);
+        } else {
+          setOrders(DEMO_ORDERS);
+        }
+        setIsLoading(false);
+      }
+    }
+
+    loadOrders();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const getStatusBadge = (status?: string) => {
@@ -188,7 +214,17 @@ export default function OrderHistoryTab() {
       </div>
 
       {/* Orders List */}
-      {orders.length === 0 ? (
+      {isLoading ? (
+        <div className="space-y-4">
+          {[1, 2].map((n) => (
+            <div key={n} className="border border-border bg-paper p-6 animate-pulse space-y-4">
+              <div className="h-4 bg-surface rounded w-1/3" />
+              <div className="h-12 bg-surface/60 rounded" />
+              <div className="h-4 bg-surface rounded w-1/4" />
+            </div>
+          ))}
+        </div>
+      ) : orders.length === 0 ? (
         <div className="border border-border bg-paper p-12 text-center shadow-xs">
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-surface text-ink-soft mb-3">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

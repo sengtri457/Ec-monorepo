@@ -1,3 +1,4 @@
+import os
 from decimal import Decimal
 from django.conf import settings
 from django.utils import timezone
@@ -128,6 +129,20 @@ class PaymentVerifyView(APIView):
         except Payment.DoesNotExist:
             return Response({"error": "Payment not found."}, status=status.HTTP_404_NOT_FOUND)
 
+        # Security check: Internal service key or Debug demo mode
+        expected_key = getattr(settings, 'INTERNAL_SERVICE_KEY', 'ec-internal-shared-secret-key-2026')
+        received_key = request.headers.get('X-Internal-Service-Key')
+        is_internal = received_key and received_key == expected_key
+        is_debug_demo = getattr(settings, 'DEBUG', True) or os.environ.get('ALLOW_DEMO_PAYMENT_VERIFICATION', 'true').lower() == 'true'
+
+        if not is_internal and not is_debug_demo:
+            return Response({
+                "error": {
+                    "code": "FORBIDDEN",
+                    "message": "Direct public payment verification is disabled in production without internal authorization."
+                }
+            }, status=status.HTTP_403_FORBIDDEN)
+
         # Idempotency check: if already completed, return without duplicate transitions
         if payment.status == 'COMPLETED':
             return Response({
@@ -136,6 +151,8 @@ class PaymentVerifyView(APIView):
                 'message': 'Payment already verified and completed.'
             }, status=status.HTTP_200_OK)
 
+        action_name = 'VERIFIED_SUCCESSFUL' if is_internal else 'SIMULATED_DEMO_VERIFIED'
+
         with transaction.atomic():
             payment.status = 'COMPLETED'
             payment.paid_at = timezone.now()
@@ -143,8 +160,8 @@ class PaymentVerifyView(APIView):
 
             PaymentTransaction.objects.create(
                 payment=payment,
-                action='VERIFIED_SUCCESSFUL',
-                raw_data=request.data or {'status': 'COMPLETED'}
+                action=action_name,
+                raw_data=request.data or {'status': 'COMPLETED', 'mode': action_name}
             )
 
         # Notify Order Service asynchronously / synchronously through REST

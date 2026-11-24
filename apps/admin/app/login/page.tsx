@@ -1,18 +1,24 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAdminAuth } from "@/context/AdminAuthContext";
 import { ShieldCheck, Lock, Mail, AlertCircle, ArrowRight } from "lucide-react";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const { login } = useAdminAuth();
+  const { login, isAuthenticated, user, isLoading } = useAdminAuth();
 
   const [email, setEmail] = useState("admin@clothes.ec");
   const [password, setPassword] = useState("AdminPassword123!");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && user?.is_staff) {
+      router.replace("/");
+    }
+  }, [isLoading, isAuthenticated, user, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,17 +36,20 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-900 px-4 py-12">
-      <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-950/80 p-8 shadow-2xl backdrop-blur-xl">
+    <div className="flex min-h-screen items-center justify-center bg-brand-obsidian px-4 py-12 relative overflow-hidden">
+      {/* Background radial ambient glow */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(148,68,52,0.15),transparent_65%)] pointer-events-none" />
+
+      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-brand-charcoal/90 p-8 shadow-2xl backdrop-blur-xl relative z-10">
         {/* Header Branding */}
         <div className="flex flex-col items-center text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 text-white shadow-lg shadow-amber-900/40">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-brand-terracotta to-brand-terracotta-hover text-white shadow-lg shadow-brand-terracotta/30">
             <ShieldCheck className="h-6 w-6" />
           </div>
           <h1 className="mt-4 text-xl font-semibold tracking-tight text-white">
             Clothes EC Console
           </h1>
-          <p className="mt-1 text-xs text-slate-400">
+          <p className="mt-1 text-xs text-neutral-400">
             Authorized administrator access for inventory & orders
           </p>
         </div>
@@ -56,35 +65,35 @@ export default function AdminLoginPage() {
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
-            <label className="block text-xs font-medium text-slate-300">
+            <label className="block text-xs font-medium text-neutral-300">
               Admin Email
             </label>
             <div className="relative mt-1.5">
-              <Mail className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+              <Mail className="absolute left-3 top-2.5 h-4 w-4 text-neutral-500" />
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@clothes.ec"
-                className="w-full rounded-lg border border-slate-800 bg-slate-900/90 py-2 pl-9 pr-3 text-sm text-white placeholder-slate-500 transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="w-full rounded-lg border border-white/10 bg-black/40 py-2 pl-9 pr-3 text-sm text-white placeholder-neutral-500 transition focus:border-brand-terracotta focus:outline-none focus:ring-1 focus:ring-brand-terracotta"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-slate-300">
+            <label className="block text-xs font-medium text-neutral-300">
               Password
             </label>
             <div className="relative mt-1.5">
-              <Lock className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+              <Lock className="absolute left-3 top-2.5 h-4 w-4 text-neutral-500" />
               <input
                 type="password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••••••"
-                className="w-full rounded-lg border border-slate-800 bg-slate-900/90 py-2 pl-9 pr-3 text-sm text-white placeholder-slate-500 transition focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                className="w-full rounded-lg border border-white/10 bg-black/40 py-2 pl-9 pr-3 text-sm text-white placeholder-neutral-500 transition focus:border-brand-terracotta focus:outline-none focus:ring-1 focus:ring-brand-terracotta"
               />
             </div>
           </div>
@@ -92,7 +101,7 @@ export default function AdminLoginPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="group relative mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-amber-500 disabled:opacity-50"
+            className="group relative mt-2 flex w-full items-center justify-center gap-2 rounded-lg bg-brand-terracotta px-4 py-2.5 text-sm font-semibold text-white shadow-md transition hover:bg-brand-terracotta-hover disabled:opacity-50"
           >
             {submitting ? (
               <span className="flex items-center gap-2">
@@ -108,9 +117,9 @@ export default function AdminLoginPage() {
           </button>
         </form>
 
-        <div className="mt-8 border-t border-slate-900 pt-4 text-center">
-          <p className="text-[11px] text-slate-500">
-            Clothes EC Monorepo • Next.js 16 App Router
+        <div className="mt-8 border-t border-white/5 pt-4 text-center">
+          <p className="text-[11px] text-neutral-500">
+            Clothes EC Monorepo • Design Tokens Normalized
           </p>
         </div>
       </div>

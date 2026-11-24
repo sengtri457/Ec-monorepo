@@ -4,6 +4,7 @@ from apps.inventory.views import (
     CreateStockReservationView,
     ReleaseStockReservationView,
     ConfirmStockReservationView,
+    ReleaseExpiredReservationsView,
     AdminInventoryListView,
     AdminStockAdjustmentView,
     AdminStockMovementListView,
@@ -21,6 +22,7 @@ urlpatterns = [
 
     # Internal service-to-service reservation workflow
     path('internal/inventory/reservations/', CreateStockReservationView.as_view(), name='internal-create-reservation'),
+    path('internal/inventory/reservations/reap-expired/', ReleaseExpiredReservationsView.as_view(), name='internal-reap-expired-reservations'),
     path('internal/inventory/reservations/<uuid:reservation_id>/release/', ReleaseStockReservationView.as_view(), name='internal-release-reservation'),
     path('internal/inventory/reservations/<uuid:reservation_id>/confirm/', ConfirmStockReservationView.as_view(), name='internal-confirm-reservation'),
 ]

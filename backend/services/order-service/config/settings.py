@@ -127,6 +127,7 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20,
 }
 
-DEFAULT_TAX_RATE = Decimal(os.environ.get('DEFAULT_TAX_RATE', '0.10'))
+# Default Tax Rate (0.00 for Cambodia retail where VAT is included in listing price)
+DEFAULT_TAX_RATE = Decimal(os.environ.get('DEFAULT_TAX_RATE', '0.00'))
 KHR_EXCHANGE_RATE = 4100
 JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY', SECRET_KEY)

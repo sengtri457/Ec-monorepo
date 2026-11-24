@@ -1,6 +1,7 @@
 from decimal import Decimal
 from unittest.mock import patch
 import pytest
+from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APIClient
 from apps.orders.models import ShippingMethod, Order, OrderItem
@@ -104,13 +105,47 @@ class TestOrderService:
         order_data = res.json()['order']
         assert order_data['customer_name'] == "Dara Chan"
         assert Decimal(order_data['subtotal']) == Decimal('80.00')
-        # subtotal $80 + shipping $2.50 + 10% tax ($8.00) = $90.50
-        assert Decimal(order_data['total_usd']) == Decimal('90.50')
+        # Cambodia VAT inclusive: subtotal $80 + shipping $2.50 + 0% tax ($0.00) = $82.50
+        assert Decimal(order_data['tax']) == Decimal('0.00')
+        assert Decimal(order_data['total_usd']) == Decimal('82.50')
         assert order_data['status'] == 'PENDING'
         assert order_data['payment_status'] == 'UNPAID'
         assert len(order_data['items']) == 1
 
         mock_reserve.assert_called_once()
+
+    @patch('apps.orders.client.ProductServiceClient.reserve_stock')
+    def test_checkout_with_tax_rate_override(self, mock_reserve, api_client, shipping_method):
+        mock_reserve.return_value = {"id": "11111111-2222-3333-4444-555555555555", "status": "PENDING"}
+
+        payload = {
+            "name": "Tax Rate Customer",
+            "email": "tax@example.com",
+            "phone": "012334455",
+            "city_province": "Phnom Penh",
+            "street_address": "Street 2004",
+            "shipping_method": "phnom_penh_express",
+            "payment_method": "KHQR",
+            "items": [
+                {
+                    "variant_id": 10,
+                    "quantity": 2,
+                    "product_title": "Denim Jeans",
+                    "sku": "JEANS-BLU-32",
+                    "size": "32",
+                    "color": "Blue",
+                    "unit_price": "40.00"
+                }
+            ]
+        }
+
+        with override_settings(DEFAULT_TAX_RATE=Decimal('0.10')):
+            res = api_client.post('/api/v1/orders/checkout/', payload, format='json')
+            assert res.status_code == status.HTTP_201_CREATED
+            order_data = res.json()['order']
+            assert Decimal(order_data['subtotal']) == Decimal('80.00')
+            assert Decimal(order_data['tax']) == Decimal('8.00')
+            assert Decimal(order_data['total_usd']) == Decimal('90.50')
 
     @patch('apps.orders.client.ProductServiceClient.release_stock')
     @patch('apps.orders.client.ProductServiceClient.reserve_stock')

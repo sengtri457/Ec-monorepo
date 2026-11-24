@@ -1,7 +1,9 @@
 | Task | Description | Status |
 | :--- | :--- | :--- |
-| Task 1 | Build `AdminBottomNav.tsx` with frosted glassmorphism, responsive pills & live badges | Complete |
-| Task 2 | Relocate brand identity & storefront link into `AdminHeader.tsx` | Complete |
-| Task 3 | Refactor `AdminShell.tsx` to remove left sidebar and expand content to 100% full-width | Complete |
-| Task 4 | Audit and ensure bottom spacing (`pb-28 sm:pb-32`) across dashboard and catalog pages | Complete |
-| Task 5 | Full verification suite (ESLint & Next.js production build across 10 routes) | Complete |
+| Task 1 | Audit & Align Financial Tax & Calculation Models (Order Service & Checkout) | Complete |
+| Task 2 | Implement Stock Reservation Expiry Reaper & Admin Cancellation Restock | Complete |
+| Task 3 | Secure Payment Verification & Fix API Gateway Health Route | Complete |
+| Task 4 | Admin Portal Route Guard & Environment Configuration | Complete |
+| Task 5 | Customer Profile Backend Integration (Order History & Address Book Sync) | Complete |
+| Task 6 | Design System Token Normalization & UX Consistency Across Web and Admin | Complete |
+| Task 7 | Full Monorepo End-to-End Verification & Documentation | Complete |
