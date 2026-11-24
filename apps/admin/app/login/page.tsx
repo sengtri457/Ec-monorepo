@@ -1,13 +1,19 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAdminAuth } from "@/context/AdminAuthContext";
 import { ShieldCheck, Lock, Mail, AlertCircle, ArrowRight } from "lucide-react";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const { login } = useAdminAuth();
+  const { login, isAuthenticated, user, isLoading } = useAdminAuth();
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && user?.is_staff) {
+      router.replace("/");
+    }
+  }, [isLoading, isAuthenticated, user, router]);
 
   const [email, setEmail] = useState("admin@clothes.ec");
   const [password, setPassword] = useState("AdminPassword123!");
