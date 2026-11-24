@@ -1,0 +1,11 @@
+.git
+.gemini
+node_modules
+apps/**/node_modules
+apps/**/.next
+backend/**/venv
+backend/**/__pycache__
+backend/**/.pytest_cache
+*.log
+docs
+infrastructure
