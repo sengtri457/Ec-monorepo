@@ -12,6 +12,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { useAdminAuth } from "@/context/AdminAuthContext";
+import { API_BASE } from "@/lib/adminApiClient";
 
 export function AdminHeader() {
   const { user, logout } = useAdminAuth();
@@ -34,7 +35,8 @@ export function AdminHeader() {
     let isMounted = true;
     const checkGateway = async () => {
       try {
-        const res = await fetch("http://localhost/api/v1/health", {
+        const gatewayOrigin = API_BASE.replace(/\/api\/v1\/?$/, "");
+        const res = await fetch(`${gatewayOrigin}/api/v1/health`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
         });

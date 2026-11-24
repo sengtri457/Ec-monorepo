@@ -2,6 +2,7 @@ import uuid
 from decimal import Decimal
 from unittest.mock import patch
 import pytest
+from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APIClient
 from apps.payments.models import Payment, PaymentTransaction
@@ -81,6 +82,34 @@ class TestPaymentService:
         res2 = api_client.post(f'/api/v1/payments/{payment.id}/verify/', format='json')
         assert res2.status_code == status.HTTP_200_OK
         assert 'already verified' in res2.json()['message'].lower()
+
+    @patch('apps.payments.client.OrderServiceClient.notify_order_paid')
+    def test_verify_payment_production_requires_auth(self, mock_notify, api_client, monkeypatch):
+        mock_notify.return_value = True
+        monkeypatch.setenv("ALLOW_DEMO_PAYMENT_VERIFICATION", "false")
+        order_uuid = uuid.uuid4()
+        payment = Payment.objects.create(
+            order_id=order_uuid,
+            order_number="CLO-20261121-PRODSEC",
+            payment_method="KHQR",
+            amount_usd=Decimal("50.00"),
+            status="PENDING"
+        )
+
+        with override_settings(DEBUG=False):
+            # Unauthenticated public call is rejected in production
+            res = api_client.post(f'/api/v1/payments/{payment.id}/verify/', format='json')
+            assert res.status_code == status.HTTP_403_FORBIDDEN
+            assert "error" in res.json()
+
+            # Call with internal service key is accepted
+            res_internal = api_client.post(
+                f'/api/v1/payments/{payment.id}/verify/',
+                format='json',
+                HTTP_X_INTERNAL_SERVICE_KEY="ec-internal-shared-secret-key-2026"
+            )
+            assert res_internal.status_code == status.HTTP_200_OK
+            assert res_internal.json()['status'] == 'SUCCESS'
 
     @patch('apps.payments.client.OrderServiceClient.notify_order_paid')
     def test_callback_idempotency(self, mock_notify, api_client):
