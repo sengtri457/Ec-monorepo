@@ -4,6 +4,12 @@ import React, { useState, useEffect } from "react";
 import { User, UserAddress } from "@/types";
 import { CAMBODIA_PROVINCES, PHNOM_PENH_KHANS } from "@/lib/cambodiaLocations";
 import { getStorageItem, setStorageItem } from "@/lib/storage";
+import {
+  fetchCustomerAddresses,
+  createCustomerAddress,
+  updateCustomerAddress,
+  deleteCustomerAddress,
+} from "@/lib/api";
 
 export interface SavedAddress {
   id: string;
@@ -42,30 +48,63 @@ export default function AddressBookTab({ user, onUpdateUser }: AddressBookTabPro
   const [landmark, setLandmark] = useState("");
   const [isDefault, setIsDefault] = useState(false);
 
-  // Initialize addresses from storage or user.address
+  // Initialize addresses from backend or storage or user.address
   useEffect(() => {
-    const saved = getStorageItem<SavedAddress[]>(STORAGE_KEY, []);
-    queueMicrotask(() => {
-      if (saved && saved.length > 0) {
-        setAddresses(saved);
-      } else {
-        // Seed from user.address
-        const initialAddr: SavedAddress = {
-          id: "addr-default-1",
-          fullName: user.name || "Customer",
-          phone: user.phone || "012889977",
-          telegram: user.telegram || "",
-          cityProvince: user.address?.cityProvince || "Phnom Penh",
-          khanDistrict: user.address?.khanDistrict || "Chamkarmon",
-          sangkatCommune: user.address?.sangkatCommune || "Boeung Keng Kang 1 (BKK1)",
-          streetAddress: user.address?.streetAddress || "House #42, Street 310",
-          landmark: user.address?.landmark || "Near Brown Coffee BKK57",
-          isDefault: true,
-        };
-        setAddresses([initialAddr]);
-        setStorageItem(STORAGE_KEY, [initialAddr]);
+    let isMounted = true;
+
+    async function loadAddresses() {
+      try {
+        const backendAddrs = await fetchCustomerAddresses();
+        if (isMounted && backendAddrs && backendAddrs.length > 0) {
+          const mapped: SavedAddress[] = backendAddrs.map((b) => ({
+            id: String(b.id),
+            fullName: b.full_name,
+            phone: b.phone,
+            telegram: b.telegram || "",
+            cityProvince: b.city_province,
+            khanDistrict: b.khan_district || "",
+            sangkatCommune: b.sangkat_commune || "",
+            streetAddress: b.street_address,
+            landmark: b.landmark || "",
+            isDefault: b.is_default,
+          }));
+          setAddresses(mapped);
+          setStorageItem(STORAGE_KEY, mapped);
+          return;
+        }
+      } catch (e) {
+        console.warn("Backend address fetch error, using local:", e);
       }
-    });
+
+      const saved = getStorageItem<SavedAddress[]>(STORAGE_KEY, []);
+      if (isMounted) {
+        if (saved && saved.length > 0) {
+          setAddresses(saved);
+        } else {
+          // Seed from user.address
+          const initialAddr: SavedAddress = {
+            id: "addr-default-1",
+            fullName: user.name || "Customer",
+            phone: user.phone || "012889977",
+            telegram: user.telegram || "",
+            cityProvince: user.address?.cityProvince || "Phnom Penh",
+            khanDistrict: user.address?.khanDistrict || "Chamkarmon",
+            sangkatCommune: user.address?.sangkatCommune || "Boeung Keng Kang 1 (BKK1)",
+            streetAddress: user.address?.streetAddress || "House #42, Street 310",
+            landmark: user.address?.landmark || "Near Brown Coffee BKK57",
+            isDefault: true,
+          };
+          setAddresses([initialAddr]);
+          setStorageItem(STORAGE_KEY, [initialAddr]);
+        }
+      }
+    }
+
+    loadAddresses();
+
+    return () => {
+      isMounted = false;
+    };
   }, [user]);
 
   const resetForm = () => {
@@ -120,12 +159,31 @@ export default function AddressBookTab({ user, onUpdateUser }: AddressBookTabPro
     });
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
 
     let updatedList: SavedAddress[] = [];
 
     if (editingId) {
+      const numId = Number(editingId);
+      if (!isNaN(numId)) {
+        try {
+          await updateCustomerAddress(numId, {
+            full_name: fullName.trim(),
+            phone: phone.trim(),
+            telegram: telegram.trim(),
+            city_province: cityProvince,
+            khan_district: khanDistrict,
+            sangkat_commune: sangkatCommune.trim(),
+            street_address: streetAddress.trim(),
+            landmark: landmark.trim(),
+            is_default: isDefault,
+          });
+        } catch (err) {
+          console.warn("Could not sync address update with backend:", err);
+        }
+      }
+
       updatedList = addresses.map((addr) => {
         if (addr.id === editingId) {
           return {
@@ -145,8 +203,28 @@ export default function AddressBookTab({ user, onUpdateUser }: AddressBookTabPro
       });
       setFeedback({ type: "success", message: "Delivery address updated successfully." });
     } else {
+      let createdBackendId: string | null = null;
+      try {
+        const created = await createCustomerAddress({
+          full_name: fullName.trim(),
+          phone: phone.trim(),
+          telegram: telegram.trim(),
+          city_province: cityProvince,
+          khan_district: khanDistrict,
+          sangkat_commune: sangkatCommune.trim(),
+          street_address: streetAddress.trim(),
+          landmark: landmark.trim(),
+          is_default: isDefault || addresses.length === 0,
+        });
+        if (created?.id) {
+          createdBackendId = String(created.id);
+        }
+      } catch (err) {
+        console.warn("Could not sync new address with backend:", err);
+      }
+
       const newAddress: SavedAddress = {
-        id: `addr-${Date.now()}`,
+        id: createdBackendId || `addr-${Date.now()}`,
         fullName: fullName.trim(),
         phone: phone.trim(),
         telegram: telegram.trim(),
@@ -177,7 +255,16 @@ export default function AddressBookTab({ user, onUpdateUser }: AddressBookTabPro
     resetForm();
   };
 
-  const handleSetDefault = (id: string) => {
+  const handleSetDefault = async (id: string) => {
+    const numId = Number(id);
+    if (!isNaN(numId)) {
+      try {
+        await updateCustomerAddress(numId, { is_default: true });
+      } catch (e) {
+        console.warn("Could not sync default address update with backend:", e);
+      }
+    }
+
     const updated = addresses.map((addr) => ({
       ...addr,
       isDefault: addr.id === id,
@@ -192,10 +279,19 @@ export default function AddressBookTab({ user, onUpdateUser }: AddressBookTabPro
     }
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (addresses.length <= 1) {
       setFeedback({ type: "error", message: "You must keep at least one delivery address." });
       return;
+    }
+
+    const numId = Number(id);
+    if (!isNaN(numId)) {
+      try {
+        await deleteCustomerAddress(numId);
+      } catch (e) {
+        console.warn("Could not sync address deletion with backend:", e);
+      }
     }
 
     const target = addresses.find((a) => a.id === id);
