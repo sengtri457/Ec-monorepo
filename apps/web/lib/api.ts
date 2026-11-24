@@ -501,43 +501,6 @@ export async function updateRiderLocation(
   }
 }
 
-interface DjangoOrderItemResponse {
-  sku: string;
-  size?: string;
-  color?: string;
-  unit_price?: string | number;
-  product_title?: string;
-  quantity: number;
-  variant?: { id?: number; product_id?: number };
-  variant_id?: number;
-}
-
-interface DjangoOrderResponse {
-  order_number: string;
-  created_at: string;
-  customer_name?: string;
-  customer_email?: string;
-  customer_phone?: string;
-  customer_telegram?: string;
-  street_address?: string;
-  khan_district?: string;
-  sangkat_commune?: string;
-  city_province?: string;
-  landmark?: string;
-  shipping_method?: { code?: string; name?: string };
-  shipping_cost?: string | number;
-  payments?: Array<{ payment_method?: string }>;
-  order_notes?: string;
-  items?: DjangoOrderItemResponse[];
-  subtotal?: string | number;
-  tax?: string | number;
-  total_usd?: string | number;
-  total_khr?: string | number;
-  tracking_number?: string;
-  status?: string;
-  payment_status?: string;
-}
-
 interface PaginatedListResponse<T> {
   results?: T[];
 }
@@ -567,11 +530,11 @@ export async function fetchCustomerOrders(): Promise<Order[]> {
         paymentMethod: (data.payments?.[0]?.payment_method?.toLowerCase() as PaymentMethod) || "khqr",
         orderNotes: data.order_notes,
       },
-      items: (data.items || []).map((item: DjangoOrderItemResponse) => ({
-        id: `${item.sku}`,
-        productId: item.variant?.product_id || item.variant_id || 1,
-        variantId: item.variant?.id || item.variant_id,
-        sku: item.sku,
+      items: (data.items || []).map((item) => ({
+        id: `${item.sku || ""}`,
+        productId: item.variant?.product_id || 1,
+        variantId: item.variant?.id,
+        sku: item.sku || "",
         selectedSize: item.size,
         selectedColor: item.color,
         title: item.product_title || "Apparel Item",
