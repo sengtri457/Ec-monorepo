@@ -37,13 +37,18 @@ class ProductServiceClient:
             raise ValidationError(f"Product Service unavailable: {str(e)}")
 
     @classmethod
-    def release_stock(cls, reservation_id: str, timeout: int = 5) -> bool:
+    def release_stock(cls, reservation_id: str, allow_restock_confirmed: bool = True, timeout: int = 5) -> bool:
         """
         Compensating transaction: releases previously reserved stock.
         """
         url = f"{PRODUCT_SERVICE_URL.rstrip('/')}/internal/inventory/reservations/{reservation_id}/release/"
         try:
-            response = requests.post(url, headers=get_internal_headers(), timeout=timeout)
+            response = requests.post(
+                url,
+                json={"allow_restock_confirmed": allow_restock_confirmed},
+                headers=get_internal_headers(),
+                timeout=timeout
+            )
             return response.status_code == 200
         except requests.RequestException:
             return False

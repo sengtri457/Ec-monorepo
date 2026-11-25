@@ -120,7 +120,7 @@ services:
       - NOTIFICATION_SERVICE_URL=http://notification-service:8000
       - JWT_SECRET_KEY=${JWT_SECRET_KEY:-shared-jwt-secret-key-change-in-production}
       - INTERNAL_SERVICE_KEY=${INTERNAL_SERVICE_KEY:-ec-internal-shared-secret-key-2026}
-      - DEFAULT_TAX_RATE=${DEFAULT_TAX_RATE:-0.10}
+      - DEFAULT_TAX_RATE=${DEFAULT_TAX_RATE:-0.00}
     volumes:
       - ../../backend/services/order-service:/app
     ports:

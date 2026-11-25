@@ -2,7 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
+import { setWorkerUrl } from "maplibre-gl";
+import { maplibreGL } from "@maplibre/maplibre-gl-leaflet";
+import { attachBasemapLayer } from "@ec/map-basemap";
 import "leaflet/dist/leaflet.css";
+import "maplibre-gl/dist/maplibre-gl.css";
 import { fetchRoadRoute } from "@/app/actions/fetch-road-route";
 import { DeliveryShipment } from "@/types";
 
@@ -118,16 +122,16 @@ export default function DeliveryMapView({ shipment, height = "380px", className 
       zoomControl: false,
     });
 
-    // Carto Voyager — High aesthetic, clean tiles
-    L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
-      {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
-        subdomains: "abcd",
-        maxZoom: 20,
-      }
-    ).addTo(map);
+    // Keyless OpenFreeMap Positron vector tiles (falls back to OSM raster if WebGL unavailable)
+    attachBasemapLayer({
+      L,
+      map,
+      maplibreGL,
+      setWorkerUrl,
+      theme: "light",
+      customStyleUrl: process.env.NEXT_PUBLIC_MAP_STYLE_URL,
+      maxZoom: 20,
+    });
 
     L.control.zoom({ position: "bottomright" }).addTo(map);
     L.control.scale({ position: "bottomleft", imperial: false }).addTo(map);

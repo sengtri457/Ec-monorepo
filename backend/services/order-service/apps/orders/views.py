@@ -409,6 +409,10 @@ class AdminOrderStatusUpdateView(APIView):
             from apps.orders.fulfillment import FulfillmentService
             FulfillmentService.create_shipment_for_order(order)
 
+        if order.status == 'CANCELLED' and old_status != 'CANCELLED':
+            if order.stock_reservation_id:
+                ProductServiceClient.release_stock(str(order.stock_reservation_id), allow_restock_confirmed=True)
+
         order.refresh_from_db()
         return Response(AdminOrderDetailSerializer(order).data, status=status.HTTP_200_OK)
 

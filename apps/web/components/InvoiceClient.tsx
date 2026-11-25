@@ -9,8 +9,6 @@ import { fetchDeliveryTracking, fetchOrderDetail } from "@/lib/api";
 import { downloadInvoice } from "@/lib/downloadInvoice";
 import { toKhr } from "@/lib/cambodiaLocations";
 import OrderStepper from "@/components/OrderStepper";
-import BakongKhqrCard from "@/components/BakongKhqrCard";
-import { buildBakongKhqr } from "@/lib/khqr";
 import DeliveryTrackingCard from "@/components/delivery/DeliveryTrackingCard";
 
 interface InvoiceClientProps {
@@ -42,6 +40,9 @@ export default function InvoiceClient({ orderId, token }: InvoiceClientProps) {
       try {
         const remoteOrder = await fetchOrderDetail(orderId, token);
         if (remoteOrder && isMounted) {
+          if (localFound?.customer?.paymentMethod && remoteOrder.customer.paymentMethod === "khqr" && localFound.customer.paymentMethod !== "khqr") {
+            remoteOrder.customer.paymentMethod = localFound.customer.paymentMethod;
+          }
           setOrder(remoteOrder);
           setIsLoading(false);
 
@@ -445,44 +446,6 @@ export default function InvoiceClient({ orderId, token }: InvoiceClientProps) {
               <p className="text-[10px] text-ink-soft pt-0.5">
                 Clothes™ Cambodia &bull; Contact: 012 345 678 &bull; Telegram: @clothescambodia
               </p>
-
-              {/* Official NBC Bakong KHQR Card on Invoice */}
-              {order.customer.paymentMethod === "khqr" && (
-                <div className="mt-4 flex flex-col sm:flex-row items-center sm:items-start gap-3.5 border border-border bg-canvas/40 p-3">
-                  <div className="shrink-0">
-                    <BakongKhqrCard
-                      payload={buildBakongKhqr({
-                        accountId: process.env.NEXT_PUBLIC_BAKONG_ACCOUNT_ID || "clothes@abaa",
-                        merchantName: process.env.NEXT_PUBLIC_BAKONG_MERCHANT_NAME || "DevClothes",
-                        merchantCity: "Phnom Penh",
-                        amount: order.total > 0 ? order.total : 1,
-                        currency: "USD",
-                        billNumber: order.id,
-                      }).qr}
-                      merchantName={process.env.NEXT_PUBLIC_BAKONG_MERCHANT_NAME || "DevClothes"}
-                      amount={order.total}
-                      amountKhr={order.totalKhr}
-                      currency="USD"
-                      size={130}
-                      className="shadow-xs"
-                    />
-                  </div>
-                  <div className="text-[11px] text-ink-soft leading-tight space-y-1">
-                    <span className="font-bold text-ink block uppercase text-[11px] text-ctrl-red">
-                      Official Bakong KHQR
-                    </span>
-                    <span className="block text-[10px]">
-                      National Bank of Cambodia EMVCo Standard
-                    </span>
-                    <span className="block text-ink font-semibold text-[11px] tabular-nums">
-                      Ref: {order.id}
-                    </span>
-                    <span className="block text-forest font-medium text-[10px]">
-                      Scan with ABA, Wing, ACLEDA, or Bakong
-                    </span>
-                  </div>
-                </div>
-              )}
             </div>
 
             <div className="w-full sm:w-80 space-y-2 text-xs">

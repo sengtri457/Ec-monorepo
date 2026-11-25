@@ -1,0 +1,22 @@
+{
+  "name": "@ec/map-basemap",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.mjs",
+  "types": "./src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.mjs"
+    }
+  },
+  "scripts": {
+    "lint": "tsc --noEmit",
+    "test": "node --test src/index.test.mjs"
+  },
+  "devDependencies": {
+    "@ec/typescript-config": "workspace:*",
+    "typescript": "^5"
+  }
+}
