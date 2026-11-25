@@ -1,8 +1,11 @@
 .git
 .gemini
-node_modules
-apps/**/node_modules
-apps/**/.next
+/node_modules
+/apps/web/node_modules
+/apps/admin/node_modules
+/packages/types/node_modules
+/packages/typescript-config/node_modules
+apps/**/.next/cache
 backend/**/venv
 backend/**/__pycache__
 backend/**/.pytest_cache
