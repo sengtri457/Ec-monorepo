@@ -11,6 +11,18 @@ echo "=========================================================="
 echo " Building Kubernetes Container Images (Local Dev)"
 echo "=========================================================="
 
+echo ""
+echo ">>> Building Next.js standalone bundles for Kubernetes..."
+(
+  cd "${ROOT_DIR}"
+  export NEXT_PUBLIC_API_URL="http://localhost:30080/api/v1"
+  export NEXT_PUBLIC_STORE_URL="http://localhost:30000"
+  export BAKONG_ACCOUNT_ID="${BAKONG_ACCOUNT_ID:-clothes@abaa}"
+  export BAKONG_MERCHANT_NAME="${BAKONG_MERCHANT_NAME:-Clothes Apparel Co}"
+  pnpm --filter web build
+  pnpm --filter admin build
+)
+
 services=(
   "ec-user-service:latest:backend/services/user-service:backend/services/user-service/Dockerfile"
   "ec-product-service:latest:backend/services/product-service:backend/services/product-service/Dockerfile"

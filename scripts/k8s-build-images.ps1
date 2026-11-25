@@ -20,6 +20,30 @@ Write-Host "==========================================================" -Foregro
 
 $root = Resolve-Path "$PSScriptRoot\.."
 
+Write-Host "`n>>> Building Next.js standalone bundles for Kubernetes..." -ForegroundColor Yellow
+$prevApiUrl = $env:NEXT_PUBLIC_API_URL
+$prevStoreUrl = $env:NEXT_PUBLIC_STORE_URL
+$prevBakongId = $env:BAKONG_ACCOUNT_ID
+$prevBakongMerchant = $env:BAKONG_MERCHANT_NAME
+try {
+    $env:NEXT_PUBLIC_API_URL = "http://localhost:30080/api/v1"
+    $env:NEXT_PUBLIC_STORE_URL = "http://localhost:30000"
+    if (-not $env:BAKONG_ACCOUNT_ID) { $env:BAKONG_ACCOUNT_ID = "clothes@abaa" }
+    if (-not $env:BAKONG_MERCHANT_NAME) { $env:BAKONG_MERCHANT_NAME = "Clothes Apparel Co" }
+
+    Push-Location $root
+    pnpm --filter web build
+    if ($LASTEXITCODE -ne 0) { Write-Error "Failed to build Next.js web app"; exit 1 }
+    pnpm --filter admin build
+    if ($LASTEXITCODE -ne 0) { Write-Error "Failed to build Next.js admin app"; exit 1 }
+} finally {
+    Pop-Location
+    $env:NEXT_PUBLIC_API_URL = $prevApiUrl
+    $env:NEXT_PUBLIC_STORE_URL = $prevStoreUrl
+    $env:BAKONG_ACCOUNT_ID = $prevBakongId
+    $env:BAKONG_MERCHANT_NAME = $prevBakongMerchant
+}
+
 $images = @(
     @{ Name = "ec-user-service:latest"; Context = "$root\backend\services\user-service"; Dockerfile = "$root\backend\services\user-service\Dockerfile" },
     @{ Name = "ec-product-service:latest"; Context = "$root\backend\services\product-service"; Dockerfile = "$root\backend\services\product-service\Dockerfile" },

@@ -7,3 +7,4 @@
 | Task 5 | Kustomize Base & Local Development Overlay Setup (Namespace, NodePort Patches) | Complete |
 | Task 6 | Build & Deployment Automation Scripts (PowerShell & Bash Cross-Platform) | Complete |
 | Task 7 | Full Deployment Verification & University Presentation Guide | Complete |
+| Task 8 | Migrate PostgreSQL Data & Fix Frontend K8s API Routing | Complete |

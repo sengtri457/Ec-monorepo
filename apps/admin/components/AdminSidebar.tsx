@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -17,6 +17,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { useAdminAuth } from "@/context/AdminAuthContext";
+import { getStoreUrl } from "@/lib/adminApiClient";
 
 export interface NavItem {
   label: string;
@@ -76,6 +77,13 @@ export function AdminSidebar({
 }: AdminSidebarProps) {
   const pathname = usePathname();
   const { user, logout } = useAdminAuth();
+  const [storeUrl, setStoreUrl] = useState(
+    process.env.NEXT_PUBLIC_STORE_URL || "http://localhost:3000"
+  );
+
+  useEffect(() => {
+    setStoreUrl(getStoreUrl());
+  }, []);
 
   const isItemActive = (item: NavItem) => {
     if (item.exact) {
@@ -221,7 +229,7 @@ export function AdminSidebar({
             </div>
           )}
           <a
-            href="http://localhost:3000"
+            href={storeUrl}
             target="_blank"
             rel="noreferrer"
             className={`group flex items-center rounded-xl text-xs text-neutral-400 hover:text-white hover:bg-neutral-800/60 transition-all ${
@@ -234,7 +242,9 @@ export function AdminSidebar({
               {!isCollapsed && <span>Public Web</span>}
             </div>
             {!isCollapsed && (
-              <span className="text-[10px] font-mono text-neutral-500">:3000</span>
+              <span className="text-[10px] font-mono text-neutral-500">
+                {storeUrl.replace(/^https?:\/\/[^/:]+/, "") || ":3000"}
+              </span>
             )}
           </a>
         </div>

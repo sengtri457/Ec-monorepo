@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Shirt } from "lucide-react";
+import { getStoreUrl } from "@/lib/adminApiClient";
 
 interface ProductThumbnailProps {
   src?: string | null;
@@ -20,6 +21,13 @@ export function ProductThumbnail({
 }: ProductThumbnailProps) {
   const [hasError, setHasError] = useState(false);
   const [triedStoreFallback, setTriedStoreFallback] = useState(false);
+  const [storeUrl, setStoreUrl] = useState(
+    process.env.NEXT_PUBLIC_STORE_URL || "http://localhost:3000"
+  );
+
+  useEffect(() => {
+    setStoreUrl(getStoreUrl());
+  }, []);
 
   // If no source or error occurred, render styled placeholder
   if (!src || hasError) {
@@ -31,7 +39,6 @@ export function ProductThumbnail({
   }
 
   // If relative path failed once, try prepending the storefront origin
-  const storeUrl = process.env.NEXT_PUBLIC_STORE_URL || "http://localhost:3000";
   const currentSrc =
     triedStoreFallback && src.startsWith("/")
       ? `${storeUrl.replace(/\/$/, "")}${src}`

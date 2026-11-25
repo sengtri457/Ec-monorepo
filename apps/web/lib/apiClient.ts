@@ -1,7 +1,29 @@
 import { getStorageItem, removeStorageItem } from "@/lib/storage";
 
-export const API_BASE =
-  process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
+const K8S_NODE_PORTS = new Set(["30000", "30001", "30080"]);
+
+/**
+ * Resolves the API gateway base URL dynamically across SSR (cluster DNS),
+ * Kubernetes NodePort browser access (:30000/:30001/:30080), and local dev.
+ */
+export function getApiBase(): string {
+  if (typeof window === "undefined") {
+    return (
+      process.env.INTERNAL_API_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      "http://127.0.0.1:8000/api/v1"
+    );
+  }
+
+  const { protocol, hostname, port } = window.location;
+  if (K8S_NODE_PORTS.has(port)) {
+    return `${protocol}//${hostname}:30080/api/v1`;
+  }
+
+  return process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
+}
+
+export const API_BASE = getApiBase();
 
 export interface RequestOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>;
@@ -23,7 +45,7 @@ export async function apiClient<T>(
 
   let url = endpoint.startsWith("http")
     ? endpoint
-    : `${API_BASE}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
+    : `${getApiBase()}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
 
   if (params) {
     const searchParams = new URLSearchParams();

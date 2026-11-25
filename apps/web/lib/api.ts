@@ -11,8 +11,8 @@ import {
   PaymentMethod,
   DeliveryShipment,
 } from "@/types";
-import { apiClient, API_BASE } from "@/lib/apiClient";
-export { API_BASE };
+import { apiClient, API_BASE, getApiBase } from "@/lib/apiClient";
+export { API_BASE, getApiBase };
 
 interface DjangoVariantResponse {
   id: number;
@@ -112,7 +112,7 @@ export async function fetchCatalogProducts(params?: {
       });
     }
 
-    const res = await fetch(`${API_BASE}/catalog/products/?${query.toString()}`, {
+    const res = await fetch(`${getApiBase()}/catalog/products/?${query.toString()}`, {
       headers: { Accept: "application/json" },
       cache: "no-store",
     });
@@ -135,7 +135,7 @@ export async function fetchCatalogProducts(params?: {
  */
 export async function fetchProductDetail(slugOrId: string | number): Promise<Product | null> {
   try {
-    const res = await fetch(`${API_BASE}/catalog/products/${slugOrId}/`, {
+    const res = await fetch(`${getApiBase()}/catalog/products/${slugOrId}/`, {
       headers: { Accept: "application/json" },
       cache: "no-store",
     });
@@ -158,7 +158,7 @@ export async function fetchProductDetail(slugOrId: string | number): Promise<Pro
  */
 export async function fetchShippingMethods(): Promise<Record<string, unknown>[]> {
   try {
-    const res = await fetch(`${API_BASE}/orders/shipping-methods/`, {
+    const res = await fetch(`${getApiBase()}/orders/shipping-methods/`, {
       headers: { Accept: "application/json" },
       cache: "no-store",
     });
@@ -175,7 +175,7 @@ export async function fetchShippingMethods(): Promise<Record<string, unknown>[]>
  */
 export async function fetchCategories(): Promise<Record<string, unknown>[]> {
   try {
-    const res = await fetch(`${API_BASE}/catalog/categories/`, {
+    const res = await fetch(`${getApiBase()}/catalog/categories/`, {
       headers: { Accept: "application/json" },
       cache: "no-store",
     });
@@ -429,7 +429,7 @@ export async function fetchDeliveryTracking(
 ): Promise<DeliveryShipment | null> {
   try {
     const res = await fetch(
-      `${API_BASE}/orders/tracking/${encodeURIComponent(trackingNumber)}/`,
+      `${getApiBase()}/orders/tracking/${encodeURIComponent(trackingNumber)}/`,
       {
         cache: "no-store",
         headers: { "Content-Type": "application/json" },
@@ -488,7 +488,7 @@ export async function updateRiderLocation(
 ): Promise<boolean> {
   try {
     const res = await fetch(
-      `${API_BASE}/orders/tracking/${encodeURIComponent(trackingNumber)}/location/`,
+      `${getApiBase()}/orders/tracking/${encodeURIComponent(trackingNumber)}/location/`,
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },

@@ -31,8 +31,12 @@ spec:
               value: "3001"
             - name: NODE_ENV
               value: "production"
+            - name: INTERNAL_API_URL
+              value: "http://gateway/api/v1"
             - name: NEXT_PUBLIC_API_URL
-              value: "/api/v1"
+              value: "http://localhost:30080/api/v1"
+            - name: NEXT_PUBLIC_STORE_URL
+              value: "http://localhost:30000"
           livenessProbe:
             httpGet:
               path: /login

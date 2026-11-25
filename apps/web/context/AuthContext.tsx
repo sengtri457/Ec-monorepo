@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { User } from "@/types";
 import { getStorageItem, setStorageItem, removeStorageItem } from "@/lib/storage";
-import { API_BASE } from "@/lib/api";
+import { API_BASE, getApiBase } from "@/lib/api";
 
 const AUTH_USER_KEY = "clothes_auth_user";
 const AUTH_TOKEN_KEY = "clothes_auth_token";
@@ -92,7 +92,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (email: string, password = "Password123!", isSignUp = false, name?: string) => {
     try {
-      const endpoint = isSignUp ? `${API_BASE}/auth/register/` : `${API_BASE}/auth/login/`;
+      const apiBase = getApiBase();
+      const endpoint = isSignUp ? `${apiBase}/auth/register/` : `${apiBase}/auth/login/`;
       const username = email.split("@")[0].replace(/[^a-zA-Z0-9_]/g, "_");
       const names = (name || username).split(" ");
       const firstName = names[0] || username;
@@ -162,7 +163,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (googlePayload?.name) payload.name = googlePayload.name.trim();
 
     try {
-      const endpoint = `${API_BASE}/auth/google/`;
+      const endpoint = `${getApiBase()}/auth/google/`;
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },

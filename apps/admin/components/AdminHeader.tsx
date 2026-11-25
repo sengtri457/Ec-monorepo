@@ -12,13 +12,20 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { useAdminAuth } from "@/context/AdminAuthContext";
-import { API_BASE } from "@/lib/adminApiClient";
+import { getApiBase, getStoreUrl } from "@/lib/adminApiClient";
 
 export function AdminHeader() {
   const { user, logout } = useAdminAuth();
   const [gatewayOnline, setGatewayOnline] = useState(true);
+  const [storeUrl, setStoreUrl] = useState(
+    process.env.NEXT_PUBLIC_STORE_URL || "http://localhost:3000"
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setStoreUrl(getStoreUrl());
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -35,7 +42,7 @@ export function AdminHeader() {
     let isMounted = true;
     const checkGateway = async () => {
       try {
-        const gatewayOrigin = API_BASE.replace(/\/api\/v1\/?$/, "");
+        const gatewayOrigin = getApiBase().replace(/\/api\/v1\/?$/, "");
         const res = await fetch(`${gatewayOrigin}/api/v1/health`, {
           method: "GET",
           headers: { "Content-Type": "application/json" },
@@ -97,7 +104,7 @@ export function AdminHeader() {
 
         {/* Storefront External Shortcut */}
         <a
-          href={process.env.NEXT_PUBLIC_STORE_URL || "http://localhost:3000"}
+          href={storeUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium text-neutral-500 hover:text-neutral-900 bg-neutral-100 hover:bg-neutral-200/70 rounded-lg transition-colors"
