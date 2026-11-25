@@ -1,0 +1,30 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: ecommerce-microservices
+
+resources:
+  - namespace.yaml
+  - storage/postgres-pvc.yaml
+  - configmaps/postgres-init-configmap.yaml
+  - configmaps/services-config.yaml
+  - configmaps/gateway-nginx-configmap.yaml
+  - secrets/services-secrets.yaml
+  - deployments/postgres.yaml
+  - deployments/user-service.yaml
+  - deployments/product-service.yaml
+  - deployments/order-service.yaml
+  - deployments/payment-service.yaml
+  - deployments/notification-service.yaml
+  - deployments/web.yaml
+  - deployments/admin.yaml
+  - deployments/gateway.yaml
+  - services/postgres.yaml
+  - services/user-service.yaml
+  - services/product-service.yaml
+  - services/order-service.yaml
+  - services/payment-service.yaml
+  - services/notification-service.yaml
+  - services/web.yaml
+  - services/admin.yaml
+  - services/gateway.yaml

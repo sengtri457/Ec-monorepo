@@ -62,3 +62,8 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: #CBD5E1;
 }
+
+/* Dark-mode filter applied only when WebGL fails and OSM raster fallback activates */
+.ec-osm-dark-fallback {
+  filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7);
+}

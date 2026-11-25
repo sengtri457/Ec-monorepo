@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-configmap
+  namespace: ecommerce-microservices
+  labels:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/part-of: ecommerce-system
+data:
+  01-init-databases.sql: |
+    -- Database initialization script for University Microservices Architecture
+    -- Creates five distinct databases to strictly enforce the "Database-per-Service" pattern.
+
+    -- 1. User Service Database
+    CREATE USER user_user WITH PASSWORD 'user_password';
+    CREATE DATABASE user_db OWNER user_user;
+    GRANT ALL PRIVILEGES ON DATABASE user_db TO user_user;
+
+    -- 2. Product Service Database
+    CREATE USER product_user WITH PASSWORD 'product_password';
+    CREATE DATABASE product_db OWNER product_user;
+    GRANT ALL PRIVILEGES ON DATABASE product_db TO product_user;
+
+    -- 3. Order Service Database
+    CREATE USER order_user WITH PASSWORD 'order_password';
+    CREATE DATABASE order_db OWNER order_user;
+    GRANT ALL PRIVILEGES ON DATABASE order_db TO order_user;
+
+    -- 4. Payment Service Database
+    CREATE USER payment_user WITH PASSWORD 'payment_password';
+    CREATE DATABASE payment_db OWNER payment_user;
+    GRANT ALL PRIVILEGES ON DATABASE payment_db TO payment_user;
+
+    -- 5. Notification Service Database
+    CREATE USER notification_user WITH PASSWORD 'notification_password';
+    CREATE DATABASE notification_db OWNER notification_user;
+    GRANT ALL PRIVILEGES ON DATABASE notification_db TO notification_user;

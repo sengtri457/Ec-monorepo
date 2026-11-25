@@ -11,8 +11,8 @@ import {
   PaymentMethod,
   DeliveryShipment,
 } from "@/types";
-import { apiClient, API_BASE } from "@/lib/apiClient";
-export { API_BASE };
+import { apiClient, API_BASE, getApiBase } from "@/lib/apiClient";
+export { API_BASE, getApiBase };
 
 interface DjangoVariantResponse {
   id: number;
@@ -112,7 +112,7 @@ export async function fetchCatalogProducts(params?: {
       });
     }
 
-    const res = await fetch(`${API_BASE}/catalog/products/?${query.toString()}`, {
+    const res = await fetch(`${getApiBase()}/catalog/products/?${query.toString()}`, {
       headers: { Accept: "application/json" },
       cache: "no-store",
     });
@@ -135,7 +135,7 @@ export async function fetchCatalogProducts(params?: {
  */
 export async function fetchProductDetail(slugOrId: string | number): Promise<Product | null> {
   try {
-    const res = await fetch(`${API_BASE}/catalog/products/${slugOrId}/`, {
+    const res = await fetch(`${getApiBase()}/catalog/products/${slugOrId}/`, {
       headers: { Accept: "application/json" },
       cache: "no-store",
     });
@@ -158,7 +158,7 @@ export async function fetchProductDetail(slugOrId: string | number): Promise<Pro
  */
 export async function fetchShippingMethods(): Promise<Record<string, unknown>[]> {
   try {
-    const res = await fetch(`${API_BASE}/orders/shipping-methods/`, {
+    const res = await fetch(`${getApiBase()}/orders/shipping-methods/`, {
       headers: { Accept: "application/json" },
       cache: "no-store",
     });
@@ -175,7 +175,7 @@ export async function fetchShippingMethods(): Promise<Record<string, unknown>[]>
  */
 export async function fetchCategories(): Promise<Record<string, unknown>[]> {
   try {
-    const res = await fetch(`${API_BASE}/catalog/categories/`, {
+    const res = await fetch(`${getApiBase()}/catalog/categories/`, {
       headers: { Accept: "application/json" },
       cache: "no-store",
     });
@@ -326,6 +326,7 @@ export async function verifyPayment(paymentId: string): Promise<Record<string, u
 }
 
 interface DjangoOrderResponse {
+  id?: string;
   order_number: string;
   created_at: string;
   customer_name: string;
@@ -378,6 +379,23 @@ export async function fetchOrderDetail(
       cache: "no-store",
     });
 
+    let detectedPaymentMethod: PaymentMethod =
+      (data.payments?.[0]?.payment_method?.toLowerCase() as PaymentMethod) ||
+      (data.payment_status === "UNPAID" ? "cod" : ("khqr" as PaymentMethod));
+
+    if (data.id) {
+      try {
+        const payRes = await apiClient<{ payment_method?: string }>(`/payments/order/${data.id}/`, {
+          cache: "no-store",
+        });
+        if (payRes?.payment_method) {
+          detectedPaymentMethod = payRes.payment_method.toLowerCase() as PaymentMethod;
+        }
+      } catch {
+        // Fall back gracefully
+      }
+    }
+
     return {
       id: data.order_number,
       createdAt: data.created_at,
@@ -394,7 +412,7 @@ export async function fetchOrderDetail(
         landmark: data.landmark,
         shippingMethod: (data.shipping_method?.code as ShippingMethod) || "phnom_penh_express",
         shippingCost: parseFloat(data.shipping_cost || "0"),
-        paymentMethod: (data.payments?.[0]?.payment_method?.toLowerCase() as PaymentMethod) || "khqr",
+        paymentMethod: detectedPaymentMethod,
         orderNotes: data.order_notes,
       },
       items: (data.items || []).map((item) => ({
@@ -429,7 +447,7 @@ export async function fetchDeliveryTracking(
 ): Promise<DeliveryShipment | null> {
   try {
     const res = await fetch(
-      `${API_BASE}/orders/tracking/${encodeURIComponent(trackingNumber)}/`,
+      `${getApiBase()}/orders/tracking/${encodeURIComponent(trackingNumber)}/`,
       {
         cache: "no-store",
         headers: { "Content-Type": "application/json" },
@@ -488,7 +506,7 @@ export async function updateRiderLocation(
 ): Promise<boolean> {
   try {
     const res = await fetch(
-      `${API_BASE}/orders/tracking/${encodeURIComponent(trackingNumber)}/location/`,
+      `${getApiBase()}/orders/tracking/${encodeURIComponent(trackingNumber)}/location/`,
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -499,43 +517,6 @@ export async function updateRiderLocation(
   } catch {
     return false;
   }
-}
-
-interface DjangoOrderItemResponse {
-  sku: string;
-  size?: string;
-  color?: string;
-  unit_price?: string | number;
-  product_title?: string;
-  quantity: number;
-  variant?: { id?: number; product_id?: number };
-  variant_id?: number;
-}
-
-interface DjangoOrderResponse {
-  order_number: string;
-  created_at: string;
-  customer_name?: string;
-  customer_email?: string;
-  customer_phone?: string;
-  customer_telegram?: string;
-  street_address?: string;
-  khan_district?: string;
-  sangkat_commune?: string;
-  city_province?: string;
-  landmark?: string;
-  shipping_method?: { code?: string; name?: string };
-  shipping_cost?: string | number;
-  payments?: Array<{ payment_method?: string }>;
-  order_notes?: string;
-  items?: DjangoOrderItemResponse[];
-  subtotal?: string | number;
-  tax?: string | number;
-  total_usd?: string | number;
-  total_khr?: string | number;
-  tracking_number?: string;
-  status?: string;
-  payment_status?: string;
 }
 
 interface PaginatedListResponse<T> {
@@ -564,14 +545,16 @@ export async function fetchCustomerOrders(): Promise<Order[]> {
         landmark: data.landmark,
         shippingMethod: (data.shipping_method?.code as ShippingMethod) || "phnom_penh_express",
         shippingCost: parseFloat(String(data.shipping_cost || "0")),
-        paymentMethod: (data.payments?.[0]?.payment_method?.toLowerCase() as PaymentMethod) || "khqr",
+        paymentMethod:
+          (data.payments?.[0]?.payment_method?.toLowerCase() as PaymentMethod) ||
+          (data.payment_status === "UNPAID" ? "cod" : ("khqr" as PaymentMethod)),
         orderNotes: data.order_notes,
       },
-      items: (data.items || []).map((item: DjangoOrderItemResponse) => ({
-        id: `${item.sku}`,
-        productId: item.variant?.product_id || item.variant_id || 1,
-        variantId: item.variant?.id || item.variant_id,
-        sku: item.sku,
+      items: (data.items || []).map((item) => ({
+        id: `${item.sku || ""}`,
+        productId: item.variant?.product_id || 1,
+        variantId: item.variant?.id,
+        sku: item.sku || "",
         selectedSize: item.size,
         selectedColor: item.color,
         title: item.product_title || "Apparel Item",

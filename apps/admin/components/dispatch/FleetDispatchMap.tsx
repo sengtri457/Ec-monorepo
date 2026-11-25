@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import "leaflet/dist/leaflet.css";
+import "maplibre-gl/dist/maplibre-gl.css";
 import { CourierData } from "./CourierTelemetryDrawer";
 
 interface FleetDispatchMapProps {
@@ -31,7 +32,17 @@ export function FleetDispatchMap({
       if (!mapContainerRef.current || mapInstanceRef.current) return;
 
       try {
-        const L = (await import("leaflet")).default;
+        const [
+          { default: L },
+          { setWorkerUrl },
+          { maplibreGL },
+          { attachBasemapLayer },
+        ] = await Promise.all([
+          import("leaflet"),
+          import("maplibre-gl"),
+          import("@maplibre/maplibre-gl-leaflet"),
+          import("@ec/map-basemap"),
+        ]);
 
         if (!isMounted || !mapContainerRef.current) return;
 
@@ -45,12 +56,16 @@ export function FleetDispatchMap({
         // Add Zoom Control at top right
         L.control.zoom({ position: "topright" }).addTo(map);
 
-        // CartoDB Dark Matter tiles
-        L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-          attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; OpenStreetMap',
+        // Keyless OpenFreeMap Dark vector tiles (falls back to OSM raster if WebGL unavailable)
+        attachBasemapLayer({
+          L,
+          map,
+          maplibreGL,
+          setWorkerUrl,
+          theme: "dark",
+          customStyleUrl: process.env.NEXT_PUBLIC_ADMIN_MAP_STYLE_URL,
           maxZoom: 19,
-          subdomains: "abcd",
-        }).addTo(map);
+        });
 
         // Add Flagship Hub Marker
         const hubIcon = L.divIcon({
@@ -187,9 +202,9 @@ export function FleetDispatchMap({
   }, []);
 
   return (
-    <div className="relative w-full h-[calc(100vh-14rem)] min-h-[520px] rounded-2xl overflow-hidden border border-neutral-800 shadow-2xl bg-neutral-950">
-      {/* Map Container */}
-      <div ref={mapContainerRef} className="w-full h-full" />
+    <div className="relative z-0 w-full h-[calc(100vh-14rem)] min-h-[520px] rounded-2xl overflow-hidden border border-neutral-800 shadow-2xl bg-neutral-950">
+      {/* Map Container (isolated stacking context so Leaflet panes stay beneath HUD/drawers) */}
+      <div ref={mapContainerRef} className="relative z-0 w-full h-full" />
 
       {/* Floating Telemetry HUD Card */}
       <div className="absolute top-4 left-4 z-20 bg-neutral-900/90 backdrop-blur-md p-4 rounded-xl border border-neutral-700 shadow-2xl text-white min-w-52">
