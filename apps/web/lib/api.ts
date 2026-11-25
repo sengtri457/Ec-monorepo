@@ -326,6 +326,7 @@ export async function verifyPayment(paymentId: string): Promise<Record<string, u
 }
 
 interface DjangoOrderResponse {
+  id?: string;
   order_number: string;
   created_at: string;
   customer_name: string;
@@ -378,6 +379,23 @@ export async function fetchOrderDetail(
       cache: "no-store",
     });
 
+    let detectedPaymentMethod: PaymentMethod =
+      (data.payments?.[0]?.payment_method?.toLowerCase() as PaymentMethod) ||
+      (data.payment_status === "UNPAID" ? "cod" : ("khqr" as PaymentMethod));
+
+    if (data.id) {
+      try {
+        const payRes = await apiClient<{ payment_method?: string }>(`/payments/order/${data.id}/`, {
+          cache: "no-store",
+        });
+        if (payRes?.payment_method) {
+          detectedPaymentMethod = payRes.payment_method.toLowerCase() as PaymentMethod;
+        }
+      } catch {
+        // Fall back gracefully
+      }
+    }
+
     return {
       id: data.order_number,
       createdAt: data.created_at,
@@ -394,7 +412,7 @@ export async function fetchOrderDetail(
         landmark: data.landmark,
         shippingMethod: (data.shipping_method?.code as ShippingMethod) || "phnom_penh_express",
         shippingCost: parseFloat(data.shipping_cost || "0"),
-        paymentMethod: (data.payments?.[0]?.payment_method?.toLowerCase() as PaymentMethod) || "khqr",
+        paymentMethod: detectedPaymentMethod,
         orderNotes: data.order_notes,
       },
       items: (data.items || []).map((item) => ({
@@ -527,7 +545,9 @@ export async function fetchCustomerOrders(): Promise<Order[]> {
         landmark: data.landmark,
         shippingMethod: (data.shipping_method?.code as ShippingMethod) || "phnom_penh_express",
         shippingCost: parseFloat(String(data.shipping_cost || "0")),
-        paymentMethod: (data.payments?.[0]?.payment_method?.toLowerCase() as PaymentMethod) || "khqr",
+        paymentMethod:
+          (data.payments?.[0]?.payment_method?.toLowerCase() as PaymentMethod) ||
+          (data.payment_status === "UNPAID" ? "cod" : ("khqr" as PaymentMethod)),
         orderNotes: data.order_notes,
       },
       items: (data.items || []).map((item) => ({
