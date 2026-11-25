@@ -4,6 +4,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "standalone",
   outputFileTracingRoot: path.join(__dirname, "../.."),
+  transpilePackages: ["@ec/map-basemap"],
   experimental: {
     cpus: 1,
   },
