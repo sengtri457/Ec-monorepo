@@ -26,10 +26,31 @@ try {
     exit 1
 }
 
-# 2. Apply Kustomize Overlay
+# 2. Sync optional Google OAuth credentials from local .env if present
 $root = Resolve-Path "$PSScriptRoot\.."
 $overlayPath = "$root\infrastructure\kubernetes\overlays\local"
 
+$googleClientId = $env:GOOGLE_CLIENT_ID
+$googleClientSecret = $env:GOOGLE_CLIENT_SECRET
+foreach ($envFile in @("$root\backend\services\user-service\.env", "$root\infrastructure\docker\.env", "$root\.env")) {
+    if ((Test-Path $envFile) -and (-not $googleClientId -or -not $googleClientSecret)) {
+        Get-Content $envFile | ForEach-Object {
+            if (-not $googleClientId -and $_ -match '^GOOGLE_CLIENT_ID=(.+)$') { $googleClientId = $matches[1].Trim().Trim('"').Trim("'") }
+            if (-not $googleClientSecret -and $_ -match '^GOOGLE_CLIENT_SECRET=(.+)$') { $googleClientSecret = $matches[1].Trim().Trim('"').Trim("'") }
+        }
+    }
+}
+if ($googleClientId -and $googleClientSecret) {
+    Write-Host "`n>>> Syncing Google OAuth credentials into Secret/google-oauth-secrets..." -ForegroundColor Yellow
+    kubectl create namespace ecommerce-microservices --dry-run=client -o yaml | kubectl apply -f - | Out-Null
+    kubectl create secret generic google-oauth-secrets `
+        --namespace ecommerce-microservices `
+        --from-literal="GOOGLE_CLIENT_ID=$googleClientId" `
+        --from-literal="GOOGLE_CLIENT_SECRET=$googleClientSecret" `
+        --dry-run=client -o yaml | kubectl apply -f - | Out-Null
+}
+
+# 3. Apply Kustomize Overlay
 Write-Host "`n>>> Applying Kustomize configuration from $overlayPath..." -ForegroundColor Yellow
 kubectl apply -k $overlayPath
 if ($LASTEXITCODE -ne 0) {

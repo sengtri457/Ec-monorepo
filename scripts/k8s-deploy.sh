@@ -20,7 +20,33 @@ if ! kubectl cluster-info > /dev/null 2>&1; then
 fi
 echo "Connected to Kubernetes cluster."
 
-# 2. Apply Kustomize Overlay
+# 2. Sync optional Google OAuth credentials from local .env if present
+read_env_val() {
+  local key="$1" file="$2"
+  grep -E "^${key}=" "$file" 2>/dev/null | head -n1 | cut -d'=' -f2- | sed -e 's/^[[:space:]"'\'']*//' -e 's/[[:space:]"'\'']*$//' || true
+}
+
+GOOGLE_ID="${GOOGLE_CLIENT_ID:-}"
+GOOGLE_SECRET="${GOOGLE_CLIENT_SECRET:-}"
+for env_file in "${ROOT_DIR}/backend/services/user-service/.env" "${ROOT_DIR}/infrastructure/docker/.env" "${ROOT_DIR}/.env"; do
+  if [[ -f "$env_file" ]]; then
+    [[ -z "$GOOGLE_ID" ]] && GOOGLE_ID="$(read_env_val GOOGLE_CLIENT_ID "$env_file")"
+    [[ -z "$GOOGLE_SECRET" ]] && GOOGLE_SECRET="$(read_env_val GOOGLE_CLIENT_SECRET "$env_file")"
+  fi
+done
+
+if [[ -n "$GOOGLE_ID" && -n "$GOOGLE_SECRET" ]]; then
+  echo ""
+  echo ">>> Syncing Google OAuth credentials into Secret/google-oauth-secrets..."
+  kubectl create namespace ecommerce-microservices --dry-run=client -o yaml | kubectl apply -f - > /dev/null
+  kubectl create secret generic google-oauth-secrets \
+    --namespace ecommerce-microservices \
+    --from-literal="GOOGLE_CLIENT_ID=${GOOGLE_ID}" \
+    --from-literal="GOOGLE_CLIENT_SECRET=${GOOGLE_SECRET}" \
+    --dry-run=client -o yaml | kubectl apply -f - > /dev/null
+fi
+
+# 3. Apply Kustomize Overlay
 echo ""
 echo ">>> Applying Kustomize configuration from ${OVERLAY_PATH}..."
 kubectl apply -k "${OVERLAY_PATH}"
