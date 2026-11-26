@@ -24,3 +24,9 @@
    kubectl rollout status deployment/admin -n ecommerce-microservices --timeout=180s
    ```
 3. Verify live routes `http://localhost:30000/tracking/<trackingNumber>` and `http://localhost:30001/dispatch`.
+
+## Observed Verification Rollout
+
+- Built `ec-web:latest` and `ec-admin:latest` with `NEXT_PUBLIC_API_URL="http://localhost:30080/api/v1"` and `NEXT_PUBLIC_STORE_URL="http://localhost:30000"`.
+- Rolled out `deployment/web` (`web-7f6bf5b448-m4nrx`) and `deployment/admin` (`admin-5f7fb557bd-xnch2`) in `ecommerce-microservices` (`exit 0`).
+- Verified HTTP `200` on `http://localhost:30000/maplibre-gl-worker.mjs` (`550,754` bytes) and `http://localhost:30001/maplibre-gl-worker.mjs` (`550,754` bytes).

@@ -21,4 +21,14 @@
 
 ## Live Browser & E2E Pipeline Verification
 
-- Executed in Task 26 (`verify_delivery_pipeline.py` + `browser` subagent verification against Kubernetes `web` & `admin` deployments). Results will be recorded upon completion of Task 26.
+- Executed in Task 26 against live Kubernetes deployments (`ecommerce-microservices` namespace: `web` at `http://localhost:30000`, `admin` at `http://localhost:30001`, API gateway at `http://localhost:30080/api/v1`):
+  - **Gateway & Worker Endpoints:** `GET /api/v1/health` (HTTP `200`), `GET http://localhost:30000/maplibre-gl-worker.mjs` (`550,754` bytes, HTTP `200`), and `GET http://localhost:30001/maplibre-gl-worker.mjs` (`550,754` bytes, HTTP `200`).
+  - **E2E Delivery Pipeline (`scripts/verify_delivery_pipeline.py` with 20s request timeout):** Passed (`exit 0`); created live Phnom Penh `OUT_FOR_DELIVERY` shipment `KH-20261126-6765` (Order `CLO-20261126-82806A`) and Siem Reap provincial shipment `KH-20261126-6247`.
+  - **Customer Storefront Browser Inspection (`http://localhost:30000/tracking/KH-20261126-6765` & `/tracking/KH-20261126-6247`):**
+    - Verified 1 `canvas.maplibregl-canvas` (`805.33 × 320` px) rendering OpenFreeMap Positron vector tiles with Khmer + English Phnom Penh and Cambodia labels.
+    - Verified zero `.leaflet-container`, `.leaflet-pane`, or `.leaflet-tile-pane` DOM nodes.
+    - Verified 3 `.maplibregl-marker` nodes (Hub, Rider/Vehicle, Destination), crisp blue OSRM route line (`Distance: 3.8 km` / `≈ 5 mins away` on `KH-20261126-6765`; `Distance: 313.5 km` / `≈ 232 mins away` on `KH-20261126-6247`), and working `Recenter` control without MapLibre/worker runtime errors (note: initial tracking page load showed pre-existing React hydration error `#418` and one missing OpenFreeMap glyph range HTTP `404`).
+  - **Admin Dispatch Console Browser Inspection (`http://localhost:30001/login` → `http://localhost:30001/dispatch`):**
+    - Verified 1 `canvas.maplibregl-canvas` (`1209.33 × 519.33` px) rendering OpenFreeMap Dark vector tiles cleanly.
+    - Verified zero `.leaflet-container`, `.leaflet-pane`, or `.leaflet-tile-pane` DOM nodes.
+    - Verified 6 `.maplibregl-marker` nodes (1 Hub + 5 couriers), interactive marker/row selection updating `CourierTelemetryDrawer` and dashed route + `easeTo`, `Reset View` camera reset, HTTP `200` on `/maplibre-gl-worker.mjs` and OpenFreeMap `styles/dark`, and zero MapLibre/JS page errors (pre-existing gateway health CORS header absence logged independently of the map).

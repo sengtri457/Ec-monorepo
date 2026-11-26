@@ -37,10 +37,10 @@
 - [x] Workspace lint passes (`pnpm lint`)
 - [x] `apps/web` and `apps/admin` production builds pass (`next build`)
 - [x] Worker bundle `public/maplibre-gl-worker.mjs` verified in both apps
-- [ ] Docker images (`ec-web:latest`, `ec-admin:latest`) rebuilt & rolled out to K8s
-- [ ] Live browser visual inspection & `verify_delivery_pipeline.py` completed
+- [x] Docker images (`ec-web:latest`, `ec-admin:latest`) rebuilt & rolled out to K8s
+- [x] Live browser visual inspection & `verify_delivery_pipeline.py` completed
 
 ## Git
 - [x] Work on `feat/maplibre-remove-leaflet` (branched off `development`)
 - [x] All phases committed cleanly without touching `main`
-- [ ] Feature branch ready for push & PR targeting `development` (per user option)
+- [x] Feature branch ready for push & PR targeting `development` (per user option)
