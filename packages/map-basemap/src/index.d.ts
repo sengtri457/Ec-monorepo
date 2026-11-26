@@ -235,7 +235,13 @@ export declare function destroyMap(
 ): void;
 export declare function fitMapToCoordinates(
   map:
-    | { fitBounds: (bounds: LngLatBounds, options?: Record<string, unknown>) => void }
+    | MapLibreMap
+    | {
+        fitBounds: (
+          bounds: LngLatBounds,
+          options?: Record<string, unknown>
+        ) => unknown;
+      }
     | null
     | undefined,
   coordinates: readonly (readonly [number, number])[],
@@ -254,17 +260,18 @@ export declare function buildRouteFeature(
   properties?: Record<string, unknown>
 ): RouteLineFeature;
 export declare function clearRouteLayer(
-  map: { getSource?: (id: string) => unknown } | null | undefined,
+  map: MapLibreMap | { getSource?: (id: string) => unknown } | null | undefined,
   sourceId: string
 ): boolean;
 export declare function upsertRouteLayer(
   map:
+    | MapLibreMap
     | {
-        isStyleLoaded?: () => boolean;
+        isStyleLoaded?: () => boolean | void;
         getSource: (id: string) => unknown;
         getLayer?: (id: string) => unknown;
-        addSource: (id: string, spec: Record<string, unknown>) => void;
-        addLayer: (spec: Record<string, unknown>) => void;
+        addSource: (id: string, spec: Record<string, unknown>) => unknown;
+        addLayer: (spec: Record<string, unknown>) => unknown;
       }
     | null
     | undefined,

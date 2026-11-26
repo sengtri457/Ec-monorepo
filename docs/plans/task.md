@@ -23,6 +23,6 @@
 | Task 21 | Phase 2/5: Migrate Customer `DeliveryMapView` & `DeliveryTrackingCard` to Pure MapLibre (TDD) | Complete |
 | Task 22 | Phase 4/5: Migrate Admin `FleetDispatchMap` to Pure MapLibre & Clean Dark Fallback CSS (TDD) | Complete |
 | Task 23 | Phase 6: Remove Leaflet Dependencies, Lockfile Entries & Active References | Complete |
-| Task 24 | Phase 7: Run Full Tests, Lint, Cambodia Geographic Checks & Production Builds | In Progress |
-| Task 25 | Phase 8A: Write `docs/migrations/maplibre-migration/` Documentation Suite | Pending |
+| Task 24 | Phase 7: Run Full Tests, Lint, Cambodia Geographic Checks & Production Builds | Complete |
+| Task 25 | Phase 8A: Write `docs/migrations/maplibre-migration/` Documentation Suite | In Progress |
 | Task 26 | Phase 8B: Rebuild Docker Images, Roll Out K8s `web`/`admin` & Verify Live Maps in Browser | Pending |

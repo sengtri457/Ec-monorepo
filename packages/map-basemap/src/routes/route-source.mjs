@@ -52,7 +52,7 @@ export function clearRouteLayer(map, sourceId) {
  * Inserts or updates a GeoJSON line route source & layer (with optional line-placed arrow symbols)
  * without duplicating sources or layers across route refreshes.
  * @param {{
- *   isStyleLoaded?: () => boolean;
+ *   isStyleLoaded?: () => boolean | void;
  *   getSource: (id: string) => any;
  *   getLayer?: (id: string) => any;
  *   addSource: (id: string, spec: Record<string, any>) => void;
