@@ -1,33 +1,57 @@
+import {
+  OSM_FALLBACK_TILE_URL,
+  DEFAULT_MAPLIBRE_WORKER_URL,
+  resolveStyleUrl,
+} from "./config/map-styles.mjs";
+
+export {
+  OPENFREEMAP_STYLES,
+  DEFAULT_MAPLIBRE_WORKER_URL,
+  OSM_FALLBACK_TILE_URL,
+  resolveStyleUrl,
+} from "./config/map-styles.mjs";
+
+export {
+  PHNOM_PENH_CENTER,
+  TOUL_KORK_HUB_COORDINATE,
+  CAMBODIA_BOUNDS,
+  CAMBODIA_TEST_LOCATIONS,
+  createDefaultMapConfig,
+} from "./config/map-config.mjs";
+
+export { toMapCoordinate, fromLatLng } from "./geo/coordinates.mjs";
+
+export {
+  isValidCoordinate,
+  isValidLatLng,
+  isWithinCambodiaBounds,
+  isLocationStale,
+  validateTelemetryUpdate,
+} from "./geo/validation.mjs";
+
+export {
+  haversineKm,
+  calculateRouteDistanceKm,
+  estimateDrivingMinutes,
+  formatDistance,
+} from "./geo/distance.mjs";
+
+export { MapInitializationError, isWebGLSupported } from "./utils/map-errors.mjs";
+
+export { createMap } from "./core/create-map.mjs";
+export { destroyMap, fitMapToCoordinates } from "./core/destroy-map.mjs";
+
+export { createHtmlMarker, syncCourierMarkers } from "./markers/create-marker.mjs";
+
+export {
+  buildRouteFeature,
+  upsertRouteLayer,
+  clearRouteLayer,
+} from "./routes/route-source.mjs";
+
 /**
- * Keyless OpenFreeMap vector style presets for light (storefront) and dark (admin) themes.
- * @type {Readonly<Record<"light" | "dark", string>>}
- */
-export const OPENFREEMAP_STYLES = Object.freeze({
-  light: "https://tiles.openfreemap.org/styles/positron",
-  dark: "https://tiles.openfreemap.org/styles/dark",
-});
-
-export const OSM_FALLBACK_TILE_URL =
-  "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
-
-export const DEFAULT_MAPLIBRE_WORKER_URL = "/maplibre-gl-worker.mjs";
-
-/**
- * Resolves the MapLibre style URL for a basemap theme, honoring optional env overrides.
- * @param {"light" | "dark"} theme
- * @param {string} [customStyleUrl]
- * @returns {string}
- */
-export function resolveStyleUrl(theme, customStyleUrl) {
-  const trimmed =
-    typeof customStyleUrl === "string" ? customStyleUrl.trim() : "";
-  return trimmed || OPENFREEMAP_STYLES[theme];
-}
-
-/**
- * Attaches an OpenFreeMap vector layer to a Leaflet map via @maplibre/maplibre-gl-leaflet,
- * configuring a same-origin Web Worker URL when provided and falling back to OpenStreetMap
- * raster tiles if WebGL/MapLibre initialization throws.
+ * Legacy Leaflet basemap bridge retained temporarily until Phase 6 dependency removal.
+ * @deprecated Migrate directly to createMap() and pure MapLibre GL JS.
  * @template TMap
  * @template {{ addTo: (map: TMap) => any }} TLayer
  * @param {{

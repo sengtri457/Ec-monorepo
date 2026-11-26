@@ -18,8 +18,8 @@
 | Task 16 | Verify Builds & Live Rendered Maps in Browser (Local Production Servers) | Complete |
 | Task 17 | Rebuild & Roll Out K8s `web` & `admin` Images (Superseded by Task 26) | Complete |
 | Task 18 | Phase 0: Sync `development`, Create `feat/maplibre-remove-leaflet` Branch & Save Plan | Complete |
-| Task 19 | Phase 1: Expand `@ec/map-basemap` with Pure MapLibre Utilities (TDD) | In Progress |
-| Task 20 | Phase 2/3: Align OSRM `fetchRoadRoute` Server Action to GeoJSON `[lng, lat]` (TDD) | Pending |
+| Task 19 | Phase 1: Expand `@ec/map-basemap` with Pure MapLibre Utilities (TDD) | Complete |
+| Task 20 | Phase 2/3: Align OSRM `fetchRoadRoute` Server Action to GeoJSON `[lng, lat]` (TDD) | In Progress |
 | Task 21 | Phase 2/5: Migrate Customer `DeliveryMapView` & `DeliveryTrackingCard` to Pure MapLibre (TDD) | Pending |
 | Task 22 | Phase 4/5: Migrate Admin `FleetDispatchMap` to Pure MapLibre & Clean Dark Fallback CSS (TDD) | Pending |
 | Task 23 | Phase 6: Remove Leaflet Dependencies, Lockfile Entries & Active References | Pending |
