@@ -20,8 +20,8 @@
 | Task 18 | Phase 0: Sync `development`, Create `feat/maplibre-remove-leaflet` Branch & Save Plan | Complete |
 | Task 19 | Phase 1: Expand `@ec/map-basemap` with Pure MapLibre Utilities (TDD) | Complete |
 | Task 20 | Phase 2/3: Align OSRM `fetchRoadRoute` Server Action to GeoJSON `[lng, lat]` (TDD) | Complete |
-| Task 21 | Phase 2/5: Migrate Customer `DeliveryMapView` & `DeliveryTrackingCard` to Pure MapLibre (TDD) | In Progress |
-| Task 22 | Phase 4/5: Migrate Admin `FleetDispatchMap` to Pure MapLibre & Clean Dark Fallback CSS (TDD) | Pending |
+| Task 21 | Phase 2/5: Migrate Customer `DeliveryMapView` & `DeliveryTrackingCard` to Pure MapLibre (TDD) | Complete |
+| Task 22 | Phase 4/5: Migrate Admin `FleetDispatchMap` to Pure MapLibre & Clean Dark Fallback CSS (TDD) | In Progress |
 | Task 23 | Phase 6: Remove Leaflet Dependencies, Lockfile Entries & Active References | Pending |
 | Task 24 | Phase 7: Run Full Tests, Lint, Cambodia Geographic Checks & Production Builds | Pending |
 | Task 25 | Phase 8A: Write `docs/migrations/maplibre-migration/` Documentation Suite | Pending |
