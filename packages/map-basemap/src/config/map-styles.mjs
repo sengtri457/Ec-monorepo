@@ -9,10 +9,6 @@ export const OPENFREEMAP_STYLES = Object.freeze({
 
 export const DEFAULT_MAPLIBRE_WORKER_URL = "/maplibre-gl-worker.mjs";
 
-// Retained temporarily until Phase 6 Leaflet dependency removal completes.
-export const OSM_FALLBACK_TILE_URL =
-  "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
-
 /**
  * Resolves the MapLibre style URL for a basemap theme, honoring optional env overrides.
  * @param {"light" | "dark"} theme

@@ -2,7 +2,6 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
   OPENFREEMAP_STYLES,
-  OSM_FALLBACK_TILE_URL,
   DEFAULT_MAPLIBRE_WORKER_URL,
   PHNOM_PENH_CENTER,
   TOUL_KORK_HUB_COORDINATE,
@@ -31,7 +30,6 @@ import {
   buildRouteFeature,
   upsertRouteLayer,
   clearRouteLayer,
-  attachBasemapLayer,
 } from "./index.mjs";
 
 describe("map styles & configuration", () => {
@@ -531,12 +529,5 @@ describe("marker management and GeoJSON route layers", () => {
     assert.equal(boundPopup, true);
     /** @type {any} */ (created.marker).onClick();
     assert.equal(clicked, true);
-  });
-});
-
-describe("legacy attachBasemapLayer compatibility (until Phase 6 cleanup)", () => {
-  it("retains attachBasemapLayer for intermediate apps compatibility", () => {
-    assert.equal(typeof attachBasemapLayer, "function");
-    assert.equal(typeof OSM_FALLBACK_TILE_URL, "string");
   });
 });
