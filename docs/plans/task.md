@@ -16,4 +16,13 @@
 | Task 14 | Integrate OpenFreeMap Positron Vector Tiles into `apps/web` (`DeliveryMapView`) | Complete |
 | Task 15 | Integrate OpenFreeMap Dark Vector Tiles into `apps/admin` (`FleetDispatchMap`) | Complete |
 | Task 16 | Verify Builds & Live Rendered Maps in Browser (Local Production Servers) | Complete |
-| Task 17 | Rebuild & Roll Out K8s `web` & `admin` Images (Blocked: Docker Desktop Daemon Offline After Restart) | Pending |
+| Task 17 | Rebuild & Roll Out K8s `web` & `admin` Images (Superseded by Task 26) | Complete |
+| Task 18 | Phase 0: Sync `development`, Create `feat/maplibre-remove-leaflet` Branch & Save Plan | Complete |
+| Task 19 | Phase 1: Expand `@ec/map-basemap` with Pure MapLibre Utilities (TDD) | In Progress |
+| Task 20 | Phase 2/3: Align OSRM `fetchRoadRoute` Server Action to GeoJSON `[lng, lat]` (TDD) | Pending |
+| Task 21 | Phase 2/5: Migrate Customer `DeliveryMapView` & `DeliveryTrackingCard` to Pure MapLibre (TDD) | Pending |
+| Task 22 | Phase 4/5: Migrate Admin `FleetDispatchMap` to Pure MapLibre & Clean Dark Fallback CSS (TDD) | Pending |
+| Task 23 | Phase 6: Remove Leaflet Dependencies, Lockfile Entries & Active References | Pending |
+| Task 24 | Phase 7: Run Full Tests, Lint, Cambodia Geographic Checks & Production Builds | Pending |
+| Task 25 | Phase 8A: Write `docs/migrations/maplibre-migration/` Documentation Suite | Pending |
+| Task 26 | Phase 8B: Rebuild Docker Images, Roll Out K8s `web`/`admin` & Verify Live Maps in Browser | Pending |
