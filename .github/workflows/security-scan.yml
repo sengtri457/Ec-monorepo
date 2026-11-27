@@ -67,4 +67,4 @@ jobs:
         uses: astral-sh/ruff-action@v3
         with:
           src: "backend"
-          args: "--config ruff.toml"
+          args: "check --config ruff.toml"
