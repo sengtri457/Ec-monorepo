@@ -211,7 +211,7 @@ class DeliveryShipment(TimeStampedModel, UUIDModel):
     recipient_name = models.CharField(max_length=150)
     recipient_phone = models.CharField(max_length=32)
 
-    # Coordinates for Leaflet map & OSRM road routing
+    # Coordinates for MapLibre map & OSRM road routing
     origin_lat = models.DecimalField(max_digits=9, decimal_places=6, default=Decimal('11.576100')) # Clothes Toul Kork Hub
     origin_lng = models.DecimalField(max_digits=9, decimal_places=6, default=Decimal('104.898800'))
     dest_lat = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
