@@ -66,4 +66,5 @@ jobs:
       - name: Run Ruff Linter
         uses: astral-sh/ruff-action@v3
         with:
-          args: "check backend/ --config ruff.toml"
+          src: "backend"
+          args: "--config ruff.toml"
