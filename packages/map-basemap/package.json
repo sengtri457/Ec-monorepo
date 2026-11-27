@@ -15,8 +15,12 @@
     "lint": "tsc --noEmit",
     "test": "node --test src/index.test.mjs"
   },
+  "peerDependencies": {
+    "maplibre-gl": "^6.19.0"
+  },
   "devDependencies": {
     "@ec/typescript-config": "workspace:*",
+    "maplibre-gl": "^6.19.0",
     "typescript": "^5"
   }
 }

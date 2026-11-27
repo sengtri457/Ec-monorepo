@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { DeliveryShipment } from "@/types";
@@ -41,6 +41,29 @@ export default function DeliveryTrackingCard({ initialShipment, showMapByDefault
       setIsRefreshing(false);
     }
   };
+
+  // Lightweight live location sync while rider is actively out for delivery
+  useEffect(() => {
+    if (!isMapOpen || shipment.status !== "OUT_FOR_DELIVERY") return;
+
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const updated = await fetchDeliveryTracking(shipment.trackingNumber);
+        if (updated && !cancelled) {
+          setShipment(updated);
+        }
+      } catch {
+        // Keep last valid shipment snapshot on transient network errors
+      }
+    };
+
+    const interval = setInterval(poll, 10_000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [isMapOpen, shipment.status, shipment.trackingNumber]);
 
   // Determine active step index (0 to 3)
   const steps = [
