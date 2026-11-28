@@ -26,3 +26,7 @@
 | Task 24 | Phase 7: Run Full Tests, Lint, Cambodia Geographic Checks & Production Builds | Complete |
 | Task 25 | Phase 8A: Write `docs/migrations/maplibre-migration/` Documentation Suite | Complete |
 | Task 26 | Phase 8B: Rebuild Docker Images, Roll Out K8s `web`/`admin` & Verify Live Maps in Browser | Complete |
+| Task 27 | Standardize Monorepo Typecheck in Turborepo & Package Scripts | Complete |
+| Task 28 | Create Frontend CI Workflow (`.github/workflows/frontend-ci.yml`) | Complete |
+| Task 29 | Create Security & Quality Scan Workflow (`.github/workflows/security-scan.yml`) | Complete |
+| Task 30 | Full Local Verification & CI Validation | Complete |

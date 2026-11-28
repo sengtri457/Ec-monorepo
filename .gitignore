@@ -29,6 +29,7 @@ yarn-error.log*
 
 # Turborepo
 .turbo/
+*.tsbuildinfo
 
 # OS & IDE
 .DS_Store

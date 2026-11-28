@@ -1,0 +1,27 @@
+target-version = "py312"
+line-length = 120
+
+[lint]
+select = ["E9", "F63", "F7", "F82", "E", "F"]
+ignore = [
+    "E501",   # line too long
+    "F401",   # unused imports
+    "RUF012", # mutable class attribute default
+    "I001",   # unsorted imports
+    "W293",   # blank line contains whitespace
+    "W291",   # trailing whitespace
+    "F541",   # f-string without placeholders
+    "F841",   # local variable assigned but never used
+    "E402",   # module level import not at top of file
+    "E722",   # do not use bare except
+]
+exclude = [
+    "**/migrations/**",
+    "**/__pycache__/**",
+    "scripts/**",
+    "*.py",
+    ".git",
+    "node_modules",
+    ".next",
+    "dist",
+]
